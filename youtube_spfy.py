@@ -78,6 +78,9 @@ def getList():
 
 def findSongs():
 	global playlistId
+	global log
+	log['song_not_found'] = []
+
 	maxTitles=100
 	thisTitle=0
 	totalProcessed=0
@@ -87,10 +90,18 @@ def findSongs():
 	for s in ytList['songs']:
 		print(s['title'])
 		result=sp.search(s['title'], limit=1, offset=0, type='track', market=None)
-		if result not in titlelist:
+		#print("result"+str(result))
+		if result not in titlelist and len(result['tracks']['items'])>0:
+			print("--added to list...")
 			titlelist.append(result)
 		elif result in titlelist:
-			print("skipping dup track name...")
+			print("--skipping dup track name...")
+		elif len(result['tracks']['items'])==0:
+			print("--song not found on spotify...")
+			log['song_not_found'].append({
+				'itemNumber' : s['title'],
+				'result' :'song not found on spotify'
+			})
 	if playlistId == None:
 		playlistId=createPlaylist()
 	addNextBatch(totalProcessed,maxTitles,titlelist)
@@ -136,6 +147,9 @@ def addSongsToPlaylist():
 	print("success!")
 
 def addNextBatch(totalProcessed,maxTitles,titlelist):
+	global log
+	log['success'] = []
+	log['failed'] = []
 	print("adding next batch...")
 	existing=[]
 	if len(existing)!=len(titlelist):
@@ -146,18 +160,44 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 	for item in range(totalProcessed,totalProcessed+maxTitles-1):
 		if thisTitle<=maxTitles and totalProcessed<len(titlelist):
 			try:
-				print("Name "+titlelist[item]['tracks']['items'][0]['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items'][0]['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
+				print(titlelist[item]['tracks']['items'][0]['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items'][0]['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
 				titleid=titlelist[item]['tracks']['items'][0]['id']
 				if titleid not in trackids and titleid not in existing:
 					trackids.append(titleid)
+					#write result to log
+					log['success'].append({
+						'itemNumber' : item,
+						'title' : titlelist[item]['tracks']['items'][0]['name'],
+						'id' : titlelist[item]['tracks']['items'][0]['id'],
+						'result' :'added'
+					})
 				elif titleid in trackids:
 					print("skipping dup trackid...")
+					#write result to log
+					log['failed'].append({
+						'itemNumber' : item,
+						'title' : titlelist[item]['tracks']['items'][0]['name'],
+						'id' : titlelist[item]['tracks']['items'][0]['id'],
+						'result' :'dup in trackid'
+					})
 				elif titleid in existing:
 					print("track already added to playlist!")
+					#write result to log
+					log['failed'].append({
+						'itemNumber' : item,
+						'title' : titlelist[item]['tracks']['items'][0]['name'],
+						'id' : titlelist[item]['tracks']['items'][0]['id'],
+						'result' :'track already added to playlist'
+					})
 				thisTitle+=1
 				totalProcessed+=1
 			except IndexError:
 				print("couldn't add item!")
+				#write result to log
+				log['failed'].append({
+					'itemNumber' : item,
+					'result' :'couldn\'t add item'
+				})
 		else:
 			break
 	if len(trackids)>0:
@@ -166,15 +206,17 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 		print("no tracks to add")
 
 	if totalProcessed==len(titlelist):
-		print("successfully uploaded "+str(totalProcessed)+" files!")
+		with open('log.txt', 'w') as outfile:  
+			json.dump(log, outfile)
+		print("successfully uploaded "+str(len(log['success']))+" files!")
 
 	else:
 		trackids.clear()
 		addNextBatch(totalProcessed,maxTitles,titlelist)
-		#print("only run one batch")
 
 if __name__ == '__main__':
 	
+	log={}
 	global sp
 	global user_config
 	skipList = "False"
@@ -232,10 +274,11 @@ else:
         print ("Can't get token for", user_config['username'])
 
 """
-To do: fix duplicate problem
-Fix adding to new list completing but not loading
+To do: 
+Allow to add to existing playlists
 Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
 Add naming list functionality
+Improve search by parsing string, seperating track title and artist
 
 to access desktop site:
 'https://open.spotify.com/user/lpt1xrmg6nxefjj4rqksawj4d',
