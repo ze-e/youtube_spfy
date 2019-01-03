@@ -204,7 +204,6 @@ if __name__ == '__main__':
 		except:
 			print('error: bad playlist id')
 	else:
-		#playlistId=user_config['default_playlist_id']
 		playlistId=None
 		print("creating new playlist")
 
