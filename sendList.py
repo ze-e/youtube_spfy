@@ -107,19 +107,40 @@ def createPlaylist():
 
 #getting tracks from an existing playlist
 def get_playlist_tracks():
-	#.user_playlist(username, playlist_id,fields='tracks,next,name')
-   """ results = sp.user_playlist_tracks(user=user_config['username'],playlist_id=playlistId)
-    tracks = results['items'][0]['id']
-    while results['next']:
-        results = sp.next(results)
-        tracks.extend(results['items'][0]['id'])
-    return tracks"""
-    results = sp.user_playlist_tracks(user=user_config['username'],playlist_id=playlistId)
-    tracks = results['items'][0]['id']
-    while results['next']:
-        results = sp.next(results)
-        tracks.extend(results['items'][0]['id'])
-    return tracks
+	#https://github.com/plamere/spotipy/issues/246
+	tracks=[]
+	maxTracks=100
+	totalTracks=0
+	while totalTracks<maxTracks:
+		results = sp.user_playlist_tracks(user=user_config['username'],playlist_id=playlistId,limit=99,offset=totalTracks)
+		print("fetched playlist!"+str(totalTracks))
+		try:
+			working=results['items'][0]['track']['uri']
+			pass
+		except IndexError:
+			print(tracks)
+			print("playlist empty!")
+			return tracks
+		for result in results['items']:
+			item=result['track']['uri']
+			item=item.split(':')[2]
+			tracks.append(item)
+			totalTracks+=1
+	else:
+		print(tracks)
+		return tracks
+"""
+	if len(results['items']) > 0:
+		result=results['items'][0]['track']['uri']
+		result=result.split(':')[2]
+		tracks.extend(result)
+
+		while results['next']:
+			result=results['items'][0]['track']['uri']
+			result=result.split(':')[2]
+			tracks.extend(result)
+"""
+
 #def findExistingPlaylist():
 
 def addSongsToPlaylist():
@@ -129,7 +150,11 @@ def addSongsToPlaylist():
 
 def addNextBatch(totalProcessed,maxTitles,titlelist):
 	print("adding next batch...")
-	existing=get_playlist_tracks()
+	existing=[]
+	if len(existing)!=len(titlelist):
+		existing=get_playlist_tracks()
+	else:
+		print("length of playlist equal to total item list")
 	thisTitle=0
 	for item in range(totalProcessed,totalProcessed+maxTitles-1):
 		if thisTitle<=maxTitles and totalProcessed<len(titlelist):
@@ -148,14 +173,14 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 				print("couldn't add item!")
 		else:
 			break
-	addSongsToPlaylist();
+	if len(trackids)>0:
+		addSongsToPlaylist();
+	else:
+		print("no tracks to add")
 
 	if totalProcessed==len(titlelist):
 		print("successfully uploaded "+str(totalProcessed)+" files!")
-		existing=get_playlist_tracks()
-		#pprint(existing)
-		with open('newPlaylist.txt', 'w') as outfile:  
-			json.dump(existing, outfile)
+
 	else:
 		trackids.clear()
 		addNextBatch(totalProcessed,maxTitles,titlelist)
