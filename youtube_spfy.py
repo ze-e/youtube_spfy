@@ -16,7 +16,7 @@ def load_config():
     global user_config
     stream = open('config.yaml')
     user_config = yaml.load(stream)
-    pprint(user_config)
+    #pprint(user_config)
 
 def firstRun():
 	data={}
@@ -104,11 +104,21 @@ def findSongs():
 			})
 	if playlistId == None:
 		playlistId=createPlaylist()
+	elif playlistId != None:
+		playlistId=findExistingPlaylist()
 	addNextBatch(totalProcessed,maxTitles,titlelist)
 
 def createPlaylist():
 	newList={}
-	newList=sp.user_playlist_create(user=user_config['username'], name='youtubeSync', public=True)
+	newList=sp.user_playlist_create(user=user_config['username'], name='youtube_spfy', public=True)
+	newListId=newList['uri']
+	newListId=newListId.split(':')[4]
+	print("new playlist created! "+newListId)
+	return newListId
+
+def createPlaylist(playListName):
+	newList={}
+	newList=sp.user_playlist_create(user=user_config['username'], name=playListName, public=True)
 	newListId=newList['uri']
 	newListId=newListId.split(':')[4]
 	print("new playlist created! "+newListId)
@@ -139,7 +149,20 @@ def get_playlist_tracks():
 		#print(tracks)
 		return tracks
 
-#def findExistingPlaylist():
+def findExistingPlaylist():
+	playlists = sp.user_playlists(user=user_config['username'])
+	for playlist in playlists['items']:
+		if playlist['name']==playlistId:
+			return playlist['id']
+		elif playlist['id']==playlistId:
+			return playlistId
+		else:
+			#raise NameError('Playlist id not found!')
+			print("Could not find playlist name or id!")
+			print("Creating new playlist!")
+			newPlaylistId=createPlaylist(playlistId)
+			return newPlaylistId
+
 
 def addSongsToPlaylist():
 	print("adding tracks to playlist...")
@@ -223,25 +246,41 @@ if __name__ == '__main__':
 	load_config()
 	#print("arguments:"+str(len(sys.argv)))
 	#you must include a url to make the list from
-	try:
-		myURL=sys.argv[1]
-	except IndexError:
-		print('no URL or missing arguments')
-	except:
-		print('an error occurred')
 
-	#add "True" as a second argument to skip creating the json 
-	if len(sys.argv) > 2:
+	if len(sys.argv) > 1:
 		try:
-			skipList=sys.argv[2]
-			print("skipping list creation? "+str(skipList))
+			myURL=sys.argv[1]
+	#	except IndexError:
+	#		print('no URL or missing arguments')
 		except:
-			print('please add argument 2, True or False')
+			print('an error occurred')
+	elif len(sys.argv) == 1:
+		text="""\
+			WELCOME TO YOUTUBE_SPFY!
 
+			How to use:
+
+			1. create a new playlist from youtube URL:
+			youtube_spfy.py [url]
+
+			2.create a new playlist from youtube URL, with name [Name]
+			youtube_spfy.py [url] [Name]
+
+			3.add songs from youtube URL to existing Spotify playlist, with playlist id [Id] or name [Name]
+			youtube_spfy.py [url] [Name/Id]
+
+			4.skip json creation by adding \"true\". This will not work if you do not enter a name:
+			youtube_spfy.py [url] [Name/Id][True]
+
+			"""
+		print(text)
+		sys.exit()
+
+	
 	#add spotify playlist id as a third argument to use a new spfy playlist
-	if len(sys.argv) > 3:
+	if len(sys.argv) > 2:
 		try:		
-			playlistId=sys.argv[3]
+			playlistId=sys.argv[2]
 			print("using custom playlist id")
 		except:
 			print('error: bad playlist id')
@@ -249,17 +288,26 @@ if __name__ == '__main__':
 		playlistId=None
 		print("creating new playlist")
 
-	if skipList == "False":
-		#build list
-		print("trying to create youtube list...")
-		ytList=getYoutube(myURL)
-		sendList(ytList)
+	#add "True" as a second argument to skip creating the json 
+	if len(sys.argv) > 3:
+		try:
+			skipList=sys.argv[3]
+			print("skipping list creation? "+str(skipList))
+		except:
+			print('please add argument 2, True or False')
 
 	#create data.txt if none exists
 	if os.path.exists('data.txt'):
 		pass
 	else:
 		firstRun()
+
+	#create youtubeList
+	if skipList == "False":
+		#build list
+		print("trying to create youtube list...")
+		ytList=getYoutube(myURL)
+		sendList(ytList)
 
 	#connect
 token = util.prompt_for_user_token(user_config['username'], scope='playlist-modify-private,playlist-modify-public', client_id=user_config['client_id'], client_secret=user_config['client_secret'], redirect_uri=user_config['redirect_uri'])
@@ -275,9 +323,8 @@ else:
 
 """
 To do: 
-Allow to add to existing playlists
+Fix broken logging (only logs last batch currently)
 Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
-Add naming list functionality
 Improve search by parsing string, seperating track title and artist
 
 to access desktop site:
