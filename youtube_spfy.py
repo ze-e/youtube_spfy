@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
 import youtube_dl
+#https://pypi.org/project/youtube_dl/
 import json
 import sys
 import spotipy
+#https://spotipy.readthedocs.io/en/latest/
 import yaml
+#might need to install this
 import os
 import spotipy.util as util
 #used if you want to print json
@@ -200,47 +203,46 @@ def createPlaylist(playListName):
 
 #
 #get tracks from an existing playlist, to avoid duplicates in our playlist
-def get_playlist_tracks():
+def get_playlist_tracks(tracks,maxTracks,batchTracks,totalTracks):
 	#https://github.com/plamere/spotipy/issues/246
 
-
 	#
-	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, this time using a while loop and the limit and offset properties
+	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, this time using a while loop and the limit and offset parameters
 	#tracks[] is the list of track ids on our playlist
 	#maxTracks is the maximum amount of tracks in a batch (100)
 	#batchTracks is the amount of tracks processed this batch
 	#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
-	tracks=[]
-	maxTracks=100
-	#batchTracks=0
-	totalTracks=0
-	#while batchTracks<maxTracks:     #found a bug here. this will only run until 100. when adding batchTracks, creates an infinite while loop
-	while totalTracks<maxTracks:
+		#tracks=[]
+		#maxTracks=100
+		#batchTracks=0
+		#totalTracks=0
+
+	if batchTracks<maxTracks:
 		batchTracks=0
-		results = sp.user_playlist_tracks(user=user_config['username'],playlist_id=playlistId,limit=99,offset=totalTracks)
+		results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
 
-		#if we got a result, keep going
 		try:
-			working=results['items'][0]['track']['uri']
-			pass
-
-		#if our playlist contains no items (because it's a new playlist, or we processed them all) we should get an index error. In that case, return our current tracklist (in the case of a new playlist, a blank list)
+			#add the ids of the tracks we found to our track[] list, and increment the total tracks processed and total processed in the batch
+			#after we 
+			for result in results['items']:
+				item=result['track']['uri']
+				item=item.split(':')[2]
+				tracks.append(item)
+				totalTracks+=1
+				batchTracks+=1
+				print(tracks+" lng: "+totalTracks)
+				get_playlist_tracks(tracks,100,batchTracks,totalTracks)
+			#if our playlist contains no items (because it's a new playlist, or we processed them all) we should get an index error. In that case, return our current tracklist (in the case of a new playlist, a blank list)
 		except IndexError:
-			#print(tracks)
+			print(tracks+" lng: "+totalTracks)
 			print("playlist empty!")
 			return tracks
-			break
+		except:
+			print("deduping error, list may contain duplicates")
+			return tracks
 
-		#add the ids of the tracks we found to our track[] list, and increment the total tracks processed and total processed in the batch
-		#after we 
-		for result in results['items']:
-			item=result['track']['uri']
-			item=item.split(':')[2]
-			tracks.append(item)
-			totalTracks+=1
-			#batchTracks+=1
 	else:
-		#print(tracks)
+		print(tracks+" lng: "+totalTracks)
 		return tracks
 
 #
@@ -285,7 +287,8 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 	#gets the current tracks in the playlist, in order to check for dups
 	existing=[]
 	if len(existing)!=len(titlelist):
-		existing=get_playlist_tracks()
+		tracks=[]
+		existing=get_playlist_tracks(tracks,100,0,0)
 	else:
 		print("length of playlist equal to total item list")
 
