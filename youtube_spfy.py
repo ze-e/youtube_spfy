@@ -161,7 +161,7 @@ def findSongs():
 		
 	#if Spotify found a result ([item]len>0) and the result is not already on our list, add it to our list
 		if len(result['tracks']['items'])>0 and result not in titlelist:
-			print("--added to list...")
+			print("--found match on spotify!")
 			titlelist.append(result)
 
 	#if the result is already on our list, don't add it
@@ -186,14 +186,16 @@ def findSongs():
 
 	#if they did, check whether what they gave us was an id or a name, and search for it in the user's Spotify playlists
 	elif playlistId != None:
-		playlistId=findExistingPlaylist()
+		playlistId=findExistingPlaylist(playlistId)
 
 	#after playlistId has been set, process the batches
 	addNextBatch(totalProcessed,maxTitles,titlelist)
 
+
 #
 #create a new playlist
 def createPlaylist(playListName):
+	print("creating new playlist...")
 	newList={}
 	newList=sp.user_playlist_create(user=user_config['username'], name=playListName, public=True)
 	newListId=newList['uri']
@@ -203,68 +205,84 @@ def createPlaylist(playListName):
 
 #
 #get tracks from an existing playlist, to avoid duplicates in our playlist
-def get_playlist_tracks(tracks,maxTracks,batchTracks,totalTracks):
+def get_playlist_tracks(tracks,maxTracks,totalTracks):
 	#https://github.com/plamere/spotipy/issues/246
-
+	#https://github.com/plamere/spotipy/issues/194#issuecomment-317192954
 	#
-	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, this time using a while loop and the limit and offset parameters
+	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter
 	#tracks[] is the list of track ids on our playlist
 	#maxTracks is the maximum amount of tracks in a batch (100)
-	#batchTracks is the amount of tracks processed this batch
+	#batchTracks is the amount of tracks processed this batch   --we don't need this?
 	#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
 		#tracks=[]
 		#maxTracks=100
 		#batchTracks=0
 		#totalTracks=0
+	print("checking for duplicates...")
 
-	if batchTracks<maxTracks:
-		batchTracks=0
-		results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
+	#batchTracks=0
+	results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
 
-		try:
-			#add the ids of the tracks we found to our track[] list, and increment the total tracks processed and total processed in the batch
-			#after we 
-			for result in results['items']:
-				item=result['track']['uri']
-				item=item.split(':')[2]
-				tracks.append(item)
-				totalTracks+=1
-				batchTracks+=1
-				print(tracks+" lng: "+totalTracks)
-				get_playlist_tracks(tracks,100,batchTracks,totalTracks)
-			#if our playlist contains no items (because it's a new playlist, or we processed them all) we should get an index error. In that case, return our current tracklist (in the case of a new playlist, a blank list)
-		except IndexError:
-			print(tracks+" lng: "+totalTracks)
-			print("playlist empty!")
-			return tracks
-		except:
-			print("deduping error, list may contain duplicates")
-			return tracks
+	if len(results['items'])>0:
+		#add the ids of the tracks we found to our track[] list, and increment the total tracks processed and total processed in the batch
+		#after we 
+		for result in results['items']:
+			item=result['track']['uri']
+			item=item.split(':')[2]
+			tracks.append(item)
+			totalTracks+=1
+			#batchTracks+=1
+		print("totalTracks: "+str(totalTracks))
 
+		get_playlist_tracks(0,100,totalTracks)
+
+		#if our playlist contains no items (because it's a new playlist, or we processed them all) we should get an index error. 
+		#In that case, return our current tracklist (in the case of a new playlist, a blank list)
 	else:
-		print(tracks+" lng: "+totalTracks)
+		print("totalTracks: "+str(totalTracks))
+		print("deduping complete!")
 		return tracks
+
+
+#	try:
+
+#	except IndexError:
+
+#	except:
+	#	print("deduping error, list may contain duplicates")
+	#	return tracks
+
+
 
 #
 #search for the playlist our user gave and return its id
-def findExistingPlaylist():
+def findExistingPlaylist(playlistId):
 	playlists = sp.user_playlists(user=user_config['username'])
-	for playlist in playlists['items']:
 
-	#if the user gave us an existing playlist name (the variable can store an id or name string) return the matching playlist's id
-		if playlist['name']==playlistId:
-			return playlist['id']
+	#see if the user has any playlists, otherwise we will get a weird error telling us NoneType has no method .split()
+	if len(playlists['items'])>0:
+		for playlist in playlists['items']:
+
+		#if the user gave us an existing playlist name (the variable can store an id or name string) return the matching playlist's id
+			if playlist['name']==playlistId:
+				return playlist['id']
 	
-	#if the user gave us an existing playlist id, just return the id they gave us
-		elif playlist['id']==playlistId:
-			return playlistId
+		#if the user gave us an existing playlist id, just return the id they gave us
+			elif playlist['id']==playlistId:
+				return playlistId
 	
-	#if the user's name doesn't match an existing playlist, then create a new playlist using the name they gave us as the name, and return the new playlist's id
-		else:
-			print("Could not find playlist name or id!")
-			print("Creating new playlist!")
-			newPlaylistId=createPlaylist(playlistId)
-			return newPlaylistId
+		#if the user's name doesn't match an existing playlist, then create a new playlist using the name they gave us as the name, and return the new playlist's id
+			else:
+				print("could not find playlist name or id!")
+				newPlaylistId=createPlaylist(playlistId)
+				return newPlaylistId
+
+	#if they have no playlists, then create a new playlist using the name they gave us as the name, and return the new playlist's id
+	else:
+		print("user has no playlists!")
+		newPlaylistId=createPlaylist(playlistId)
+		return newPlaylistId
+
 
 #
 #add the batch to the playlist
@@ -288,7 +306,7 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 	existing=[]
 	if len(existing)!=len(titlelist):
 		tracks=[]
-		existing=get_playlist_tracks(tracks,100,0,0)
+		existing=get_playlist_tracks(tracks,100,0)
 	else:
 		print("length of playlist equal to total item list")
 
@@ -414,7 +432,7 @@ if __name__ == '__main__':
 	if len(sys.argv) > 2:
 		try:		
 			playlistId=sys.argv[2]
-			print("playlist id found")
+			print("playlist id/name found")
 		except:
 			print('error: bad playlist id/name')
 	else:
@@ -446,8 +464,8 @@ if __name__ == '__main__':
 		#sendList(ytList)
 #
 #connect to spotify
-
-token = util.prompt_for_user_token(user_config['username'], scope='playlist-modify-private,playlist-modify-public', client_id=user_config['client_id'], client_secret=user_config['client_secret'], redirect_uri=user_config['redirect_uri'])
+#scopes='playlist-read-private,playlist-modify-private,playlist-modify-public,user-read-private'
+token = util.prompt_for_user_token(user_config['username'], scope='playlist-read-private,playlist-modify-private,playlist-modify-public', client_id=user_config['client_id'], client_secret=user_config['client_secret'], redirect_uri=user_config['redirect_uri'])
 
 if token:
         sp = spotipy.Spotify(auth=token)
@@ -467,6 +485,8 @@ Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle argum
 
 Improve search by parsing string, seperating track title and artist
 Improve encapsulation of methods...break them into smaller parts
+Improve json by changing it from dict to list
+	-we can also create a spotify list from any json file/any list if we implement this
 
 to access desktop site:
 'https://open.spotify.com/user/lpt1xrmg6nxefjj4rqksawj4d',
