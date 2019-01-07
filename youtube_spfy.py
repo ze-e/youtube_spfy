@@ -210,44 +210,6 @@ def createPlaylist(playListName):
 	newListId=newListId.split(':')[4]
 	print("new playlist created! "+newListId)
 	return newListId
-
-#
-#get tracks from an existing playlist, to avoid duplicates in our playlist
-def get_playlist_tracks(tracks,maxTracks,totalTracks):
-	#
-	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter
-	#tracks[] is the list of track ids on our playlist
-	#maxTracks is the maximum amount of tracks in a batch (100)
-	#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
-	print("checking for duplicates...")
-	results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
-
-	if len(results['items'])>0:
-		#add the ids of the tracks we found to our track[] list, and increment the total tracks processed
-		for result in results['items']:
-			item=result['track']['uri']
-			item=item.split(':')[2]
-			tracks.append(item)
-			totalTracks+=1
-		return get_playlist_tracks(tracks,100,totalTracks)
-
-		#if our playlist contains no items (because it's a new playlist, or we processed them all),return our current tracklist (in the case of a new playlist, a blank list)
-
-	elif len(results['items'])==None:
-		print("no tracks found")
-		print("deduping complete!")		
-		tracks=[]
-		return tracks
-
-	elif len(results['items'])==0:
-		print("deduping complete!")
-		return tracks
-	else:
-		print("deduping error, list may contain duplicates")
-		return tracks
-
-
-
 #
 #search for the playlist our user gave and return its id
 def findExistingPlaylist(playlistId):
@@ -277,6 +239,40 @@ def findExistingPlaylist(playlistId):
 		newPlaylistId=createPlaylist(playlistId)
 		return newPlaylistId
 
+#
+#this gets all tracks from a playlist
+#it is used to make sure we don't add any tracks we have already added
+def get_playlist_tracks(tracks,maxTracks,totalTracks):
+	#
+	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter
+	#tracks[] is the list of track ids on our playlist
+	#maxTracks is the maximum amount of tracks in a batch (100)
+	#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
+	print("loading existing playlist tracks...")
+	results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
+
+	if len(results['items'])>0:
+		#add the ids of the tracks we found to our track[] list, and increment the total tracks processed
+		for result in results['items']:
+			item=result['track']['uri']
+			item=item.split(':')[2]
+			tracks.append(item)
+			totalTracks+=1
+		return get_playlist_tracks(tracks,100,totalTracks)
+
+		#if our playlist contains no items (because it's a new playlist, or we processed them all),return our current tracklist (in the case of a new playlist, a blank list)
+
+	elif len(results['items'])==None:
+		print("error fetching playlist tracks or playlist is empty")
+		tracks=[]
+		return tracks
+
+	elif len(results['items'])==0:
+		print("all existing playlist tracks loaded")
+		return tracks
+	else:
+		print("error fetching playlist tracks. warning: list may contain duplicates")
+		return tracks
 
 #
 #add the batch to the playlist
