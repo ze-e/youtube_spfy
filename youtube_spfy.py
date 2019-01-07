@@ -130,9 +130,6 @@ def getYoutube(url):
 			print(s['title'])
 	return data
 
-#def sendList(list):
-#	print(ytList)
-
 #
 #return the data from the youtube jsonlist
 def getList():
