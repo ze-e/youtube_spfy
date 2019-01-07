@@ -474,19 +474,3 @@ if token:
         findSongs()
 else:
         print ("Can't get token for", user_config['username'])
-
-"""
-To do: 
-Fix broken logging (only logs last batch currently)
-
-Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
-
-Improve search by parsing string, seperating track title and artist
-Improve encapsulation of methods...break them into smaller parts
-Improve json by changing it from dict to list
-	-we can also create a spotify list from any json file/any list if we implement this
-
-to access desktop site and play around with user spotify lists:
-'https://open.spotify.com/user/lpt1xrmg6nxefjj4rqksawj4d',
-	
-"""
