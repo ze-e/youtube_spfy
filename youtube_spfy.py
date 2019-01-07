@@ -1,3 +1,19 @@
+"""
+To do: 
+Fix broken logging (only logs last batch currently)
+
+Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
+
+Improve search by parsing string, seperating track title and artist
+Improve encapsulation of methods...break them into smaller parts
+Improve json by changing it from dict to list
+	-we can also create a spotify list from any json file/any list if we implement this
+
+to access desktop site and play around with user spotify lists:
+'https://open.spotify.com/user/lpt1xrmg6nxefjj4rqksawj4d',
+	
+"""
+
 from __future__ import unicode_literals
 import youtube_dl
 #https://pypi.org/project/youtube_dl/
@@ -6,11 +22,10 @@ import sys
 import spotipy
 #https://spotipy.readthedocs.io/en/latest/
 import yaml
-#might need to install this
 import os
 import spotipy.util as util
-#used if you want to print json
 from pprint import pprint
+#used for debugging, if you want to print json
 
 ytList={}
 trackids=[]
@@ -206,51 +221,37 @@ def createPlaylist(playListName):
 #
 #get tracks from an existing playlist, to avoid duplicates in our playlist
 def get_playlist_tracks(tracks,maxTracks,totalTracks):
-	#https://github.com/plamere/spotipy/issues/246
-	#https://github.com/plamere/spotipy/issues/194#issuecomment-317192954
 	#
 	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter
 	#tracks[] is the list of track ids on our playlist
 	#maxTracks is the maximum amount of tracks in a batch (100)
-	#batchTracks is the amount of tracks processed this batch   --we don't need this?
 	#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
-		#tracks=[]
-		#maxTracks=100
-		#batchTracks=0
-		#totalTracks=0
 	print("checking for duplicates...")
-
-	#batchTracks=0
 	results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
 
 	if len(results['items'])>0:
-		#add the ids of the tracks we found to our track[] list, and increment the total tracks processed and total processed in the batch
-		#after we 
+		#add the ids of the tracks we found to our track[] list, and increment the total tracks processed
 		for result in results['items']:
 			item=result['track']['uri']
 			item=item.split(':')[2]
 			tracks.append(item)
 			totalTracks+=1
-			#batchTracks+=1
-		print("totalTracks: "+str(totalTracks))
+		return get_playlist_tracks(tracks,100,totalTracks)
 
-		get_playlist_tracks(0,100,totalTracks)
+		#if our playlist contains no items (because it's a new playlist, or we processed them all),return our current tracklist (in the case of a new playlist, a blank list)
 
-		#if our playlist contains no items (because it's a new playlist, or we processed them all) we should get an index error. 
-		#In that case, return our current tracklist (in the case of a new playlist, a blank list)
-	else:
-		print("totalTracks: "+str(totalTracks))
-		print("deduping complete!")
+	elif len(results['items'])==None:
+		print("no tracks found")
+		print("deduping complete!")		
+		tracks=[]
 		return tracks
 
-
-#	try:
-
-#	except IndexError:
-
-#	except:
-	#	print("deduping error, list may contain duplicates")
-	#	return tracks
+	elif len(results['items'])==0:
+		print("deduping complete!")
+		return tracks
+	else:
+		print("deduping error, list may contain duplicates")
+		return tracks
 
 
 
@@ -259,7 +260,7 @@ def get_playlist_tracks(tracks,maxTracks,totalTracks):
 def findExistingPlaylist(playlistId):
 	playlists = sp.user_playlists(user=user_config['username'])
 
-	#see if the user has any playlists, otherwise we will get a weird error telling us NoneType has no method .split()
+	#see if the user has any playlists
 	if len(playlists['items'])>0:
 		for playlist in playlists['items']:
 
@@ -326,7 +327,6 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 			try:
 				print(titlelist[item]['tracks']['items'][0]['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items'][0]['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
 				titleid=titlelist[item]['tracks']['items'][0]['id']
-				
 			#if the titleid isn't in our list of trackids, and it doesn't exist in our playlist, add it to the trackids and log it
 				if titleid not in trackids and titleid not in existing:
 					trackids.append(titleid)
@@ -479,7 +479,6 @@ else:
 """
 To do: 
 Fix broken logging (only logs last batch currently)
-Fix 
 
 Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
 
@@ -488,7 +487,7 @@ Improve encapsulation of methods...break them into smaller parts
 Improve json by changing it from dict to list
 	-we can also create a spotify list from any json file/any list if we implement this
 
-to access desktop site:
+to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/lpt1xrmg6nxefjj4rqksawj4d',
 	
 """
