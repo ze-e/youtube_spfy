@@ -26,10 +26,6 @@ import os
 import spotipy.util as util
 from pprint import pprint
 #used for debugging, if you want to print json
-
-ytList={}
-trackids=[]
-
 #
 #displays welcome/help message
 def display_help(message):
@@ -402,6 +398,9 @@ if __name__ == '__main__':
 
 #
 #set global vaiables	
+
+	ytList={}
+	trackids=[]
 	log={}
 	global sp
 	global user_config
