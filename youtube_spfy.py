@@ -10,7 +10,7 @@ Improve json by changing it from dict to list
 	-we can also create a spotify list from any json file/any list if we implement this
 
 to access desktop site and play around with user spotify lists:
-'https://open.spotify.com/user/lpt1xrmg6nxefjj4rqksawj4d',
+'https://open.spotify.com/user/[userId]',
 	
 """
 
