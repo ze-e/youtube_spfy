@@ -71,7 +71,7 @@ LOG.TXT
 
 Sometimes youtube_spfy cannot find a song on Spotify, or an error occurs preventing a song from being uploaded to your list. Your Log.txt file will tell you exactly which songs failed because they could not be found on Spotify, which could not be uploaded due to an error, and which ones succeeded. If possible, it will include the name and/or Spotify id of the song.
 ```
-Tip: songs are more likely to be found on Spotify if they are in the format:
+Tip: Songs are more likely to be found on Spotify if their title is in the format:
 Artist - Song
 Songs that include extra information after this, such as "Artist - Song [Official]" are less likely to be found
 ```
