@@ -26,9 +26,9 @@ The username is the userid of the account into which we are uploading our playli
 ===QUICK CONFIG===
 you can configure your file with this default information:
 username: [your username]
-client_id:"6496749177e54dcca460c2131d6fe77a"
-client_secret:"dad3409cb96d457aa73f5b1550c3ebb8"
-redirect_uri:"https://localhost:8080"
+client_id : "6496749177e54dcca460c2131d6fe77a"
+client_secret : "dad3409cb96d457aa73f5b1550c3ebb8"
+redirect_uri : "https://localhost:8080"
 ===         ====
 ```
 Or, create your own config information:
