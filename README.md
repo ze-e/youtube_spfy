@@ -76,8 +76,9 @@ Songs that include extra information after this, such as "Artist - Song [Officia
 ```
 Youtube_spfy will not allow duplicate files on a playlist. If a song was not added to the playlist because it was already found on the playlist, this will be stated on the log.txt entry for this song.
 ```
-Tip: If a playlist contains a song, plus several remixes of that song, it is very likely that Spotify will return the 
-original version of the song as the top result, rather than the remix. Therefore, the remixes are unlikely to be added
+Tip: If a playlist contains a song, plus several remixes of that song, it is very likely that Spotify will return 
+the original version of the song as the top result, rather than the remix. Therefore, the remixes are unlikely 
+to be added
 ```
 
 ~ ~ ~ WE HOPE YOU ENJOY USING YOUTUBE_SPFY! ~ ~ ~
