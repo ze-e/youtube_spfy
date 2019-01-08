@@ -1,7 +1,5 @@
 """
 To do: 
-Fix broken logging (only logs last batch currently)
-
 Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
 
 Improve search by parsing string, seperating track title and artist
@@ -26,6 +24,8 @@ import os
 import spotipy.util as util
 from pprint import pprint
 #used for debugging, if you want to print json
+import datetime
+
 #
 #displays welcome/help message
 def display_help(message):
@@ -79,6 +79,53 @@ def firstRun():
 	data={}
 	with open('data.txt', 'w') as outfile:  
 		json.dump(data, outfile)
+#
+#logs our results
+class Log:
+	logText={}
+	logText['song_not_found']=[]
+	logText['failure']=[]	
+	logText['success']=[]	
+	logText['date']=str(datetime.datetime.now())
+
+	def __init__(self):
+		if os.path.exists('log.txt'):
+			pass
+		else:	
+			with open('log.txt', 'w') as outfile:  
+				json.dump(self.logText, outfile)
+
+	def noResults(self,item):
+		self.logText['song_not_found'].append({
+			'itemNumber' : item,
+			'result' :'song not found on spotify'
+		})
+	def failure(self,item_number,item_title,item_id,result):
+		self.logText['failure'].append({
+			'itemNumber' : item_number,
+			'title' : item_title,
+			'id' : item_id,
+			'result' : result
+		})
+	def success(self,item_number,item_title,item_id):
+		self.logText['success'].append({
+			'itemNumber' : item_number,
+			'title' : item_title,
+			'id' : item_id,
+			'result' :'added'
+		})
+
+	def print(self):
+		with open('log.txt', 'w') as outfile:  
+			json.dump(self.logText, outfile)
+
+	def results(self):
+		notFoundItems=len(self.logText['song_not_found'])
+		failureItems=len(self.logText['failure'])
+		successItems=len(self.logText['success'])
+		return notFoundItems,failureItems,successItems
+
+
 
 #
 #create json from youtube playlist, using youtube-dl (https://rg3.github.io/youtube-dl/) and the youtube_dl python module (https://pypi.org/project/youtube_dl/)
@@ -141,10 +188,6 @@ def getList():
 #first, we search for our youtubelist on Spotify, and create a list of those that exist on Spotify
 def findSongs():
 	global playlistId
-	global log
-
-	#writes a log of the songs not found by Spotify
-	log['song_not_found'] = []
 
 	#
 	#spotify only allows us to return >100 items at a time. To get around this, we must split the songs into >100-song "batches"
@@ -179,10 +222,8 @@ def findSongs():
 	#if it wasn't found on Spotify, log it into the "song not found" section of our log
 		elif len(result['tracks']['items'])==0:
 			print("--song not found on spotify...")
-			log['song_not_found'].append({
-				'itemNumber' : s['title'],
-				'result' :'song not found on spotify'
-			})
+			title=s['title']
+			log.noResults(title)
 
 	#
 	#next we send our list of tracks to be uploaded
@@ -284,12 +325,7 @@ def addSongsToPlaylist():
 #
 #processes a batch, then terminates the program when all batches have processed
 def addNextBatch(totalProcessed,maxTitles,titlelist):
-	global log
 
-	#logs the tracks that were successfully uploaded, or failed to upload
-	#bug: only logs for a single batch
-	log['success'] = []
-	log['failed'] = []
 	print("adding next batch...")
 
 	#gets the current tracks in the playlist, in order to check for dups
@@ -320,33 +356,19 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 				if titleid not in trackids and titleid not in existing:
 					trackids.append(titleid)
 					#write result to log
-					log['success'].append({
-						'itemNumber' : item,
-						'title' : titlelist[item]['tracks']['items'][0]['name'],
-						'id' : titlelist[item]['tracks']['items'][0]['id'],
-						'result' :'added'
-					})
+					log.success(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'])
 
 			#if it is already in our list of track ids, skip it and log the result
 				elif titleid in trackids:
 					print("skipping dup trackid...")
 					#write result to log
-					log['failed'].append({
-						'itemNumber' : item,
-						'title' : titlelist[item]['tracks']['items'][0]['name'],
-						'id' : titlelist[item]['tracks']['items'][0]['id'],
-						'result' :'dup in trackid'
-					})
+					log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'dup in trackid')
+
 			#if it is already in our playlist, skip it and log the result
 				elif titleid in existing:
 					print("track already added to playlist!")
 					#write result to log
-					log['failed'].append({
-						'itemNumber' : item,
-						'title' : titlelist[item]['tracks']['items'][0]['name'],
-						'id' : titlelist[item]['tracks']['items'][0]['id'],
-						'result' :'track already added to playlist'
-					})
+					log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'track already added to playlist')
 
 			#increment the ids processed this batch, and the total amount of ids processed
 				thisTitle+=1
@@ -356,10 +378,8 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 			except IndexError:
 				print("couldn't add item!")
 				#write result to log
-				log['failed'].append({
-					'itemNumber' : item,
-					'result' :'couldn\'t add item'
-				})
+				log.failure(item,'unknown','unknown','couldn\'t add item')
+
 		#exit the loop if we've reached our batch limit or reached the end of our list of titles
 		else:
 			break
@@ -372,9 +392,10 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 #
 #when the total processed is equal to the total number of items on our list of tracks, congratulations! we uploaded our list!
 	if totalProcessed==len(titlelist):
-		with open('log.txt', 'w') as outfile:  
-			json.dump(log, outfile)
-		print("successfully uploaded files!")
+		log.print()
+		notFoundItems,failureItems,successItems=log.results()
+		print(str(notFoundItems)+" items not found on Spotify, "+str(failureItems)+" items failed to upload and "+str(successItems)+" items added successfully!")
+		print("(view log.txt for additional information)")
 #
 #if we still have some tracks on our tracklist, clear our list of track ids and start the next batch
 	else:
@@ -394,7 +415,7 @@ if __name__ == '__main__':
 
 	ytList={}
 	trackids=[]
-	log={}
+	log=Log()
 	global sp
 	global user_config
 	skipList = "False"
