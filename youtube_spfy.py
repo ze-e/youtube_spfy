@@ -1,8 +1,5 @@
 """
 To do: 
-Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
-
-Improve search by parsing string, seperating track title and artist
 
 to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/[userId]',
