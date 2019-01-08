@@ -1,5 +1,5 @@
 # youtube_spfy
-Create a spotify playlist from a youtube playlist
+Create a Spotify playlist from a youtube playlist
 
 CONFIGURING YOUTUBE_SPFY
 
