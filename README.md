@@ -77,4 +77,4 @@ Songs that include extra information after this, such as "Artist - Song [Officia
 ```
 Youtube_spfy will not allow duplicate files on a playlist. If a song was not added to the list because it was already found on the list, this will be stated on the log.txt entry for this song.
 
-WE HOPE YOU ENJOY USING YOUTUBE SPFY!
+~ ~ ~ WE HOPE YOU ENJOY USING YOUTUBE_SPFY! ~ ~ ~
