@@ -217,7 +217,7 @@ def findSongs():
 		playlistId=findExistingPlaylist(playlistId)
 
 	#after playlistId has been set, process the batches
-	#addBatch(totalProcessed,maxTitles,titlelist)
+
 	return titlelist
 
 
