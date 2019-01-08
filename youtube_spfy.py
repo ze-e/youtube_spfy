@@ -1,6 +1,4 @@
 """
-To do: 
-
 to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/[userId]',
 	
