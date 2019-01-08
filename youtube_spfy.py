@@ -52,7 +52,7 @@ def display_help(message):
 		youtube_spfy.py --source [url] --name [Name/Id]
 		youtube_spfy.py --s [url] -n [Name/Id]
 
-		4.skip json creation by adding "True".
+		4.skip downloading json song list from youtube, and use the last list downloaded
 		youtube_spfy.py --source [url] --name [Name/Id] --skipJSON [True]
 		youtube_spfy.py -s [url] -n [Name/Id] -skip [True]
 
