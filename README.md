@@ -27,7 +27,7 @@ Configuration--
 youtube_spfy must be configured before it can be used. You will need to enter a username, client_id, client_secret and redirect_uri, found in the config.yaml file
 
 1.
-The username is the userid of the account into which we are uploading our playlists. On mobile, it can be found by logging in, hitting the gear icon in the upper right hand corner of the app, and navigating to "Account". On desktop, it can be found by clicking on your username in the lower left hand corner, and clicking on "View Account," under the "Account Overview" tab.
+The username is the userid of the account into which we are uploading our playlists. On mobile, it can be found by logging into Spotify, hitting the gear icon in the upper right hand corner of the app, and navigating to "Account". On desktop, it can be found by clicking on your username in the lower left hand corner, and clicking on "View Account," under the "Account Overview" tab.
 ```
 ===QUICK CONFIG===
 you can configure your file with this default information. If so, skip number 2:
