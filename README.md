@@ -12,12 +12,15 @@ https://www.python.org/downloads/
 
 the youtube_dl python module
 https://pypi.org/project/youtube_dl/
+```pip install youtube_dl```
 
 spotipy
 https://spotipy.readthedocs.io/en/latest/
+```pip install spotipy```
 
 pyyaml
 https://pyyaml.org/wiki/PyYAMLDocumentation
+```pip install pyyaml```
 
 Configuration--
 
