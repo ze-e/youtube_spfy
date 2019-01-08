@@ -49,7 +49,7 @@ Simply create an account, navigate to the dashboard and select "Create App." The
 
 USING YOUTUBE_SPFY
 
-To use youtube_spfy you must have spotify account to upload to, and the url of a youtube playlist. Simply enter youtube_spfy.py + the url + a name for the spotify playlist (optional) into the command line and hit enter!
+To use youtube_spfy you must have a spotify account to upload to, and the url of a youtube playlist. Simply enter youtube_spfy.py + the url + a name for the spotify playlist (optional) into the command line and hit enter!
 
 You can also add the tracks from a youtube playlist into an existing spotify playlist by entering youtube_spfy.py + the url + the name or id of the spotify playlist
 
