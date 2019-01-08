@@ -4,6 +4,7 @@ takes a youtube music list and creates a spotify playlist from it
 CONFIGURING YOUTUBE_SPFY
 
 Dependencies-- 
+
 youtube-spfy takes the following dependencies:
 
 the youtube_dl python module
@@ -16,6 +17,7 @@ pyyaml
 https://pyyaml.org/wiki/PyYAMLDocumentation
 
 Configuration--
+
 youtube_spfy must be configured before it can be used. You will need to enter a username, client_id, client_secret and redirect_uri, found in the config.yaml file
 
 1.
