@@ -1,5 +1,5 @@
 # youtube_spfy
-takes a youtube music list and creates a spotify playlist from it
+Create a spotify playlist from a youtube playlist
 
 CONFIGURING YOUTUBE_SPFY
 
@@ -40,6 +40,10 @@ https://developer.spotify.com/dashboard/
 Simply create an account, navigate to the dashboard and select "Create App." The client_id will be immediately available. To receive the client_secret, click "show client secret." To create a redirect_uri (https://localhost:8080 is fine), go to the app you created, and click on "edit settings," enter the redirect uri under "redirect uri," click "add," then click "save"
 
 USING YOUTUBE_SPFY
+
+To use youtube_spfy you must have spotify account to upload to, and the url of a youtube playlist. Simply enter youtube_spfy.py + the url + a name for the spotify playlist (optional) into the command line and hit enter!
+
+You can also add the tracks from a youtube playlist into an existing spotify playlist by entering youtube_spfy.py + the url + the name or id of the spotify playlist
 
 		1. create a new playlist from youtube URL:
 		youtube_spfy.py [url]
