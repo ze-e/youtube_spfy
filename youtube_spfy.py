@@ -4,8 +4,6 @@ Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle argum
 
 Improve search by parsing string, seperating track title and artist
 Improve encapsulation of methods...break them into smaller parts
-Improve json by changing it from dict to list
-	-we can also create a spotify list from any json file/any list if we implement this
 
 to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/[userId]',
@@ -76,7 +74,7 @@ def load_config():
 #
 #creates json text file if none exists
 def firstRun():
-	data={}
+	data=[]
 	with open('data.txt', 'w') as outfile:  
 		json.dump(data, outfile)
 #
@@ -134,8 +132,9 @@ def getYoutube(url):
 	print("building youtube json...")
 
 	#create the dict and list we will add our titles into
-	data = {}
-	data['songs'] = []
+	#data = {}
+	#data['songs'] = []
+	data = []
 
 	ydl = youtube_dl.YoutubeDL({'outtmpl': '%(id)s%(ext)s','ignoreerrors': True})
 
@@ -153,19 +152,14 @@ def getYoutube(url):
 		for video in result['entries']:
 			if video!=None:
 				video_title = video['title']
-				data['songs'].append({
-					'title' : video_title
-				})
+				data.append(video_title)
 
 	#single video
 	else:
 		video = result
 		video_title = video['title']
 		print("title"+video_title)
-
-		data['songs'].append({
-			'title' : video_title
-		})
+		data.append(video_title)
 
 	#write to our json file
 	with open('data.txt', 'w') as outfile:  
@@ -173,8 +167,8 @@ def getYoutube(url):
 
 	with open('data.txt') as json_file:  
 		data = json.load(json_file)
-		for s in data['songs']:
-			print(s['title'])
+		for s in data:
+			print(s)
 	return data
 
 #
@@ -206,9 +200,9 @@ def findSongs():
 	#get our youtube json, and search for each item by title
 	ytList=getList()
 	print("building list...");
-	for s in ytList['songs']:
-		print(s['title'])
-		result=sp.search(s['title'], limit=1, offset=0, type='track', market=None)
+	for s in ytList:
+		print(s)
+		result=sp.search(s, limit=1, offset=0, type='track', market=None)
 		
 	#if Spotify found a result ([item]len>0) and the result is not already on our list, add it to our list
 		if len(result['tracks']['items'])>0 and result not in titlelist:
@@ -222,7 +216,7 @@ def findSongs():
 	#if it wasn't found on Spotify, log it into the "song not found" section of our log
 		elif len(result['tracks']['items'])==0:
 			print("--song not found on spotify...")
-			title=s['title']
+			title=s
 			log.noResults(title)
 
 	#
@@ -388,7 +382,7 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 	if len(trackids)>0:
 		addSongsToPlaylist();
 	else:
-		print("no tracks to add")
+		print("no additional tracks to add")
 #
 #when the total processed is equal to the total number of items on our list of tracks, congratulations! we uploaded our list!
 	if totalProcessed==len(titlelist):
@@ -413,7 +407,9 @@ if __name__ == '__main__':
 #
 #set global vaiables	
 
-	ytList={}
+	#ytList={}
+	ytList=[]
+
 	trackids=[]
 	log=Log()
 	global sp
@@ -474,7 +470,6 @@ if __name__ == '__main__':
 		#build list
 		print("trying to create youtube list...")
 		ytList=getYoutube(myURL)
-		#sendList(ytList)
 #
 #connect to spotify
 #scopes='playlist-read-private,playlist-modify-private,playlist-modify-public,user-read-private'
