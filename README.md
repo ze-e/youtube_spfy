@@ -86,6 +86,6 @@ Spotify lists all tracks from the original youtube playlist (whether they were a
 
 You can create your own list of songs manually in this format, and save these as data.txt and youtube_spfy will attempt to search for them and add them to your spotify playlist. Instead of adding a URL, put "data.txt" in your second argument, like so:
 
-		youtube_spfy.py [data.txt]
+		youtube_spfy.py data.txt
 
 ~ ~ ~ WE HOPE YOU ENJOY USING YOUTUBE_SPFY! ~ ~ ~
