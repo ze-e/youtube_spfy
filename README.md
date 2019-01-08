@@ -65,7 +65,7 @@ You can also add the tracks from a youtube playlist into an existing spotify pla
 		youtube_spfy.py --source [url] --name [Name/Id]
 		youtube_spfy.py --s [url] -n [Name/Id]
 
-		4.skip downloading json song list from youtube, using the last list downloaded
+		4.skip downloading json song list from youtube, and use the last list downloaded
 		youtube_spfy.py --source [url] --name [Name/Id] --skipJSON 
 		youtube_spfy.py -s [url] -n [Name/Id] -skip
     
