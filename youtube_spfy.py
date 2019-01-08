@@ -94,19 +94,19 @@ class Log:
 
 	def noResults(self,item):
 		self.logText['song_not_found'].append({
-			'itemNumber' : item,
+			'item' : item,
 			'result' :'song not found on spotify'
 		})
 	def failure(self,item_number,item_title,item_id,result):
 		self.logText['failure'].append({
-			'itemNumber' : item_number,
+			'item' : item_number,
 			'title' : item_title,
 			'id' : item_id,
 			'result' : result
 		})
 	def success(self,item_number,item_title,item_id):
 		self.logText['success'].append({
-			'itemNumber' : item_number,
+			'item' : item_number,
 			'title' : item_title,
 			'id' : item_id,
 			'result' :'added'
