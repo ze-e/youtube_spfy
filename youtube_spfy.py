@@ -407,7 +407,6 @@ if __name__ == '__main__':
 #
 #set global vaiables	
 
-	#ytList={}
 	ytList=[]
 
 	trackids=[]
