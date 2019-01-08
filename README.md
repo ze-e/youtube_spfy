@@ -20,7 +20,7 @@ youtube_spfy must be configured before it can be used. You will need to enter a 
 
 1.
 The username is the userid of the account into which we are uploading our playlists. On mobile, it can be found by logging in, hitting the gear icon in the upper right hand corner of the app, and navigating to "Account". On desktop, it can be found by clicking on your username in the lower left hand corner, and clicking on "View Account," under the "Account Overview" tab.
-
+```
 ===QUICK CONFIG===
 you can configure your file with this default information:
 username: [your username]
@@ -28,7 +28,7 @@ client_id:"6496749177e54dcca460c2131d6fe77a"
 client_secret:"dad3409cb96d457aa73f5b1550c3ebb8"
 redirect_uri:"https://localhost:8080"
 ===         ====
-
+```
 Or, create your own config information:
 
 2.
