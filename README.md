@@ -6,6 +6,7 @@ CONFIGURING YOUTUBE_SPFY
 Dependencies-- 
 
 youtube-spfy takes the following dependencies:
+
 python
 https://www.python.org/downloads/
 the youtube_dl python module
