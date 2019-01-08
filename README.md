@@ -32,9 +32,11 @@ client_secret : "dad3409cb96d457aa73f5b1550c3ebb8"
 redirect_uri : "https://localhost:8080"
 ===         ====
 ```
-To create your config information:
 
 2.
+To create your config information:
+
+
 The client_id, client_secret_, and redirect_uri are obtained by creating a developer account  and app at:
 https://developer.spotify.com/dashboard/
 
