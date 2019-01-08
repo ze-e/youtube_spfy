@@ -66,8 +66,8 @@ You can also add the tracks from a youtube playlist into an existing spotify pla
 		youtube_spfy.py --s [url] -n [Name/Id]
 
 		4.skip json creation by adding "True".
-		youtube_spfy.py --source [url] --name [Name/Id] --skipJSON [True]
-		youtube_spfy.py -s [url] -n [Name/Id] -skip [True]
+		youtube_spfy.py --source [url] --name [Name/Id] --skipJSON 
+		youtube_spfy.py -s [url] -n [Name/Id] -skip
     
 The first time you use youtube_spfy, you will be asked to grant access to Spotify, and then redirected to your redirect uri. Simply copy the uri of the page you are redirected to (including the domain ie https://localhost:8080) into the command line and hit enter. You should not need to do this again unless your config.yaml file is edited or your token expires.
 
