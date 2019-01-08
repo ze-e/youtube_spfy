@@ -38,6 +38,7 @@ https://developer.spotify.com/dashboard/
 Simply create an account, navigate to the dashboard and select "Create App." The client_id will be immediately available. To receive the client_secret, click "show client secret." To create a redirect_uri (https://localhost:8080 is fine), go to the app you created, and click on "edit settings," enter the redirect uri under "redirect uri," click "add," then click "save"
 
 USING YOUTUBE_SPFY
+
 		1. create a new playlist from youtube URL:
 		youtube_spfy.py [url]
 
