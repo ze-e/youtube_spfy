@@ -3,7 +3,6 @@ To do:
 Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
 
 Improve search by parsing string, seperating track title and artist
-Improve encapsulation of methods...break them into smaller parts
 
 to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/[userId]',
@@ -182,18 +181,6 @@ def getList():
 #first, we search for our youtubelist on Spotify, and create a list of those that exist on Spotify
 def findSongs():
 	global playlistId
-
-	#
-	#spotify only allows us to return >100 items at a time. To get around this, we must split the songs into >100-song "batches"
-
-	#
-	#maxTitle is the maximum amount of titles spotify will allow us to search for at a time
-	#thisTitle counts how many files have been processed in this batch
-	#totalProcessed counts how many files have been processed altogether
-	#titleList will be our list of titles that have been found on Spotify and are ready to upload
-	maxTitles=100
-	thisTitle=0
-	totalProcessed=0
 	titlelist=[]
 	
 	#
@@ -232,7 +219,8 @@ def findSongs():
 		playlistId=findExistingPlaylist(playlistId)
 
 	#after playlistId has been set, process the batches
-	addNextBatch(totalProcessed,maxTitles,titlelist)
+	#addBatch(totalProcessed,maxTitles,titlelist)
+	return titlelist
 
 
 #
@@ -276,13 +264,15 @@ def findExistingPlaylist(playlistId):
 
 #
 #this gets all tracks from a playlist
-#it is used to make sure we don't add any tracks we have already added
+#it is used by add_batch() to make sure we don't add any tracks we have already added
+
+#
+#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter
+#tracks[] is the list of track ids on our playlist
+#maxTracks is the maximum amount of tracks in a batch (100)
+#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
 def get_playlist_tracks(tracks,maxTracks,totalTracks):
-	#
-	#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter
-	#tracks[] is the list of track ids on our playlist
-	#maxTracks is the maximum amount of tracks in a batch (100)
-	#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
+
 	print("loading existing playlist tracks...")
 	results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
 
@@ -318,9 +308,21 @@ def addSongsToPlaylist():
 
 #
 #processes a batch, then terminates the program when all batches have processed
-def addNextBatch(totalProcessed,maxTitles,titlelist):
 
-	print("adding next batch...")
+
+#
+#spotify only allows us to return >100 items at a time. To get around this, we must split the songs into >100-song "batches"
+
+#
+#maxTitle is the maximum amount of titles spotify will allow us to search for at a time
+#thisTitle counts how many files have been processed in this batch
+#totalProcessed counts how many files have been processed altogether
+#titleList will be our list of titles that have been found on Spotify and are ready to upload
+
+
+def addBatch(totalProcessed,maxTitles,titlelist):
+
+	print("adding batch...")
 
 	#gets the current tracks in the playlist, in order to check for dups
 	existing=[]
@@ -394,7 +396,7 @@ def addNextBatch(totalProcessed,maxTitles,titlelist):
 #if we still have some tracks on our tracklist, clear our list of track ids and start the next batch
 	else:
 		trackids.clear()
-		addNextBatch(totalProcessed,maxTitles,titlelist)
+		addBatch(totalProcessed,maxTitles,titlelist)
 #
 #
 #
@@ -480,6 +482,11 @@ if token:
         print("connection successful")
 
 #if token was successful, search for the songs in the list
-        findSongs()
+        titlelist = findSongs()
+
+#once we get our titlelist, add it to the batch
+        addBatch(0,100,titlelist)
+	
+
 else:
         print ("Can't get token for", user_config['username'])
