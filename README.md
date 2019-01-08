@@ -7,10 +7,10 @@ Dependencies--
 youtube-spfy takes the following dependencies:
 
 the youtube_dl python module
-#https://pypi.org/project/youtube_dl/
+https://pypi.org/project/youtube_dl/
 
 spotipy
-#https://spotipy.readthedocs.io/en/latest/
+https://spotipy.readthedocs.io/en/latest/
 
 pyyaml
 https://pyyaml.org/wiki/PyYAMLDocumentation
