@@ -1,6 +1,12 @@
 """
+To do: 
+Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
+
+Improve search by parsing string, seperating track title and artist
+
 to access desktop site and play around with user spotify lists:
-'https://open.spotify.com/user/[userId]',	
+'https://open.spotify.com/user/[userId]',
+	
 """
 
 from __future__ import unicode_literals
@@ -125,8 +131,6 @@ def getYoutube(url):
 	print("building youtube json...")
 
 	#create the dict and list we will add our titles into
-	#data = {}
-	#data['songs'] = []
 	data = []
 
 	ydl = youtube_dl.YoutubeDL({'outtmpl': '%(id)s%(ext)s','ignoreerrors': True})
@@ -468,7 +472,6 @@ if __name__ == '__main__':
 		ytList=getYoutube(myURL)
 #
 #connect to spotify
-#scopes='playlist-read-private,playlist-modify-private,playlist-modify-public,user-read-private'
 token = util.prompt_for_user_token(user_config['username'], scope='playlist-read-private,playlist-modify-private,playlist-modify-public', client_id=user_config['client_id'], client_secret=user_config['client_secret'], redirect_uri=user_config['redirect_uri'])
 
 if token:
