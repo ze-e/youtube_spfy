@@ -456,6 +456,10 @@ if __name__ == '__main__':
 		except:
 			print('please add argument 2, True or False')
 
+	if myURL=='data.txt':
+		skipList="True"
+		print("skipping list creation, and using data.txt instead")
+
 #
 #create text files
 
