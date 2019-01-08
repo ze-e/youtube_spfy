@@ -22,6 +22,7 @@ import spotipy.util as util
 from pprint import pprint
 #used for debugging, if you want to print json
 import datetime
+import argparse
 
 #
 #displays welcome/help message
@@ -45,16 +46,20 @@ def display_help(message):
 		HOW TO USE:
 
 		1. create a new playlist from youtube URL:
-		youtube_spfy.py [url]
+		youtube_spfy.py --source [url]
+		youtube_spfy.py -s [url]
 
 		2.create a new playlist from youtube URL, with name [Name]
-		youtube_spfy.py [url] [Name]
+		youtube_spfy.py --source [url] --name [Name]
+		youtube_spfy.py -s [url] -n [Name]
 
 		3.add songs from youtube URL to existing Spotify playlist, with playlist id [Id] or name [Name]
-		youtube_spfy.py [url] [Name/Id]
+		youtube_spfy.py --source [url] --name [Name/Id]
+		youtube_spfy.py --s [url] -n [Name/Id]
 
-		4.skip json creation by adding \"true\". (Note: This will not work if you do not enter a name/ID!):
-		youtube_spfy.py [url] [Name/Id][True]
+		4.skip json creation by adding "True".
+		youtube_spfy.py --source [url] --name [Name/Id] --skipJSON [True]
+		youtube_spfy.py -s [url] -n [Name/Id] -skip [True]
 
 		- - - - - - - - - - - - - - - - - -
 
@@ -422,39 +427,40 @@ if __name__ == '__main__':
 
 #
 #check arguments
-
+	parser=argparse.ArgumentParser()
+	parser.add_argument("--source","-s",help="the url of the youtube playlist we are creating out spotify list from. Can be set to \"data.txt\" to use a custom data.txt song list")
+	parser.add_argument("--name","-n",help="an id for an existing playlist, a name of an existing playlist, a name for a new playlist, or blank--in which case a new playlist is created with the default name")
+	parser.add_argument("--skipJSON","-skip",help="if set to True, a new JSON file will not be created and the last youtube playlist uploaded will be used",action="store_true")
+	args = parser.parse_args()
 #first argument checks for a URL, if none is present, a help message is displayed
-	if len(sys.argv) > 1:
+	if args.source!=None:
 		try:
-			myURL=sys.argv[1]
+			myURL=args.source
 		except:
 			print('an error occurred')
-	elif len(sys.argv) == 1:
+	elif args.source==None:
+		print("error: a source url is required")
 		display_help(2)
-
 	
 #second argument will be either:
 #1 - an id for an existing playlist
 #2 - a name of an existing playlist
 #3 - a name for a new playlist
 #4 - blank, in which case a new playlist is created with the default name
-	if len(sys.argv) > 2:
+	if args.name!=None:
 		try:		
-			playlistId=sys.argv[2]
+			playlistId=args.name
 			print("playlist id/name found")
 		except:
 			print('error: bad playlist id/name')
-	else:
+	elif args.name==None:
 		playlistId=None
 		print("creating new playlist")
 
 #if the third argument is "True", skip creating the json 
-	if len(sys.argv) > 3:
-		try:
-			skipList=sys.argv[3]
-			print("skipping list creation? "+str(skipList))
-		except:
-			print('please add argument 2, True or False')
+	if args.skipJSON:
+		skipList="True"
+		print("skipping list creation")
 
 	if myURL=='data.txt':
 		skipList="True"
