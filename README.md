@@ -9,6 +9,7 @@ youtube-spfy takes the following dependencies:
 
 python
 https://www.python.org/downloads/
+
 the youtube_dl python module
 https://pypi.org/project/youtube_dl/
 
