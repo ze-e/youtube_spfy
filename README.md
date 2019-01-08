@@ -81,4 +81,11 @@ the original version of the song as the top result, rather than the remix. There
 to be added
 ```
 
+DATA.TXT
+Spotify lists all tracks from the original youtube playlist (whether they were added or not) into the file "data.txt". This file consists simply of titles listed in square brackets in the format ["item1","item2","item3...etc.]
+
+You can create your own list of songs manually in this format, and save these as data.txt and youtube_spfy will attempt to search for them and add them to your spotify playlist. Instead of adding a URL, put "data.txt" in your second argument, like so:
+
+		youtube_spfy.py [data.txt]
+
 ~ ~ ~ WE HOPE YOU ENJOY USING YOUTUBE_SPFY! ~ ~ ~
