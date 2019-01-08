@@ -5,7 +5,7 @@ CONFIGURING YOUTUBE_SPFY
 
 Dependencies-- 
 
-youtube-spfy takes the following dependencies:
+youtube_spfy requires the following dependencies:
 
 python
 https://www.python.org/downloads/
