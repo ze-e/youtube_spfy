@@ -90,7 +90,7 @@ DATA.TXT
 youtube_spfy lists all tracks from the original youtube playlist (whether they were added or not) into the file "data.txt". This file consists simply of titles listed in square brackets in the format ["item1","item2","item3"...etc.]
 
 You can create your own list of songs manually in this format, and save these as data.txt and youtube_spfy will attempt to search for them and add them to your spotify playlist. Instead of adding a URL, put "data.txt" as your source, like so:
-		youtube_spfy.py --s data.txt
+		youtube_spfy.py --source data.txt
 		youtube_spfy.py -s data.txt
 
 ~ ~ ~ WE HOPE YOU ENJOY USING YOUTUBE_SPFY! ~ ~ ~
