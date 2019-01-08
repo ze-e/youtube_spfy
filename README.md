@@ -62,4 +62,10 @@ You can also add the tracks from a youtube playlist into an existing spotify pla
     
 The first time you use youtube_spfy, you will be asked to grant access to Spotify, and then redirected to your redirect uri. Simply copy the uri of the page you are redirected to (including the domain ie https://localhost:8080) into the command line and hit enter. You should not need to do this again unless your config.yaml file is edited or your token expires.
 
+LOG.TXT
+
+Sometimes youtube_spfy cannot find a song on Spotify, or an error occurs preventing a song from being uploaded to your list. Your Log.txt file will tell you exactly which songs failed because they could not be found on Spotify, which could not be uploaded due to an error, and which ones succeeded. If possible, it will include the name and/or Spotofy id of the song.
+
+Youtube_spfy will not allow duplicate files on a playlist. If a song was not added to the list because it was already found on the list, this will be stated on the log.txt entry for this song.
+
 WE HOPE YOU ENJOY USING YOUTUBE SPFY!
