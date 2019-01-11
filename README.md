@@ -78,7 +78,7 @@ Sometimes youtube_spfy cannot find a song on Spotify, or an error occurs prevent
 Tip: Any words inside of parentheses () or square brackets[] will automatically be deleted. 
 So "Artist - Name (Official Audio)" becomes "Artist - Name." 
 This is because the latter is more likely to yield a result on Spotify, while the former will return 'not found'. 
-However, this means that arists with these characters in their name, such as Sunn O))) may create errors. 
+However, this means that arists with these characters in their name, such as Sunn O))), may not return the desired result. 
 
 Additionally, Spotify may return a different version of the song based on the title. 
 This is especially true of remixes, which will usually return the original version of the song rather than the remix
