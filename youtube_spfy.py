@@ -1,4 +1,9 @@
 """
+To do: 
+Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
+
+Improve search by parsing string, seperating track title and artist
+
 to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/[userId]',
 	
@@ -52,7 +57,7 @@ def display_help(message):
 		youtube_spfy.py --source [url] --name [Name/Id]
 		youtube_spfy.py --s [url] -n [Name/Id]
 
-		4.skip downloading json song list from youtube, and use the last list downloaded
+		4.skip json creation by adding "True".
 		youtube_spfy.py --source [url] --name [Name/Id] --skipJSON [True]
 		youtube_spfy.py -s [url] -n [Name/Id] -skip [True]
 
@@ -81,6 +86,7 @@ def firstRun():
 class Log:
 	logText={}
 	logText['song_not_found']=[]
+	logText['song_renamed']=[]
 	logText['failure']=[]	
 	logText['success']=[]	
 	logText['date']=str(datetime.datetime.now())
@@ -96,6 +102,12 @@ class Log:
 		self.logText['song_not_found'].append({
 			'item' : item,
 			'result' :'song not found on spotify'
+		})
+
+	def renamed(self,old,new):
+		self.logText['song_renamed'].append({
+			'item' : old,
+			'renamed to': new
 		})
 	def failure(self,item_number,item_title,item_id,result):
 		self.logText['failure'].append({
@@ -149,12 +161,32 @@ def getYoutube(url):
 		for video in result['entries']:
 			if video!=None:
 				video_title = video['title']
+				#cleans up the video title, removes everything after a ( or [ in a title, or after ) ] if they are the first character in the title string
+				oldTitle=video_title
+				video_title=cleanTitle(video_title,"(",")")
+				if oldTitle!=video_title:
+					log.renamed(oldTitle,video_title)
+				oldTitle=video_title
+				video_title=cleanTitle(video_title,"[","]")
+				if oldTitle!=video_title:
+					log.renamed(oldTitle,video_title)
+				#
 				data.append(video_title)
 
 	#single video
 	else:
 		video = result
 		video_title = video['title']
+		#
+		oldTitle=video_title
+		video_title=cleanTitle(video_title,"(",")")
+		if oldTitle!=video_title:
+			log.renamed(oldTitle,video_title)
+		oldTitle=video_title
+		video_title=cleanTitle(video_title,"[","]")
+		if oldTitle!=video_title:
+			log.renamed(oldTitle,video_title)
+		#
 		print("title"+video_title)
 		data.append(video_title)
 
@@ -167,6 +199,26 @@ def getYoutube(url):
 		for s in data:
 			print(s)
 	return data
+
+#
+#strips characters out of the title name in order to improve search results
+def cleanTitle(video_title,begin,end):
+	splitCha=begin
+	if splitCha in video_title:
+		if video_title.find(splitCha, 0, len(video_title))!=0:
+			#oldTitle=video_title
+			video_title=video_title.split(splitCha, 1)[0]
+			#log.renamed(oldTitle,video_title)
+			return cleanTitle(video_title,begin,end)
+		elif video_title.find(splitCha, 0, len(video_title))==0:
+			#oldTitle=video_title
+			video_title=video_title.split(end, 1)[1]
+			#log.renamed(oldTitle,video_title)
+			return cleanTitle(video_title,begin,end)
+	elif splitCha not in video_title:
+		return video_title
+
+
 
 #
 #return the data from the youtube jsonlist
@@ -184,10 +236,13 @@ def findSongs():
 	#
 	#get our youtube json, and search for each item by title
 	ytList=getList()
-	print("building list...");
+	print("searching for tracks...");
 	for s in ytList:
 		print(s)
-		result=sp.search(s, limit=1, offset=0, type='track', market=None)
+		if s!="":
+			result=sp.search(s, limit=1, offset=0, type='track', market=None)
+		else:
+			pass
 		
 	#if Spotify found a result ([item]len>0) and the result is not already on our list, add it to our list
 		if len(result['tracks']['items'])>0 and result not in titlelist:
@@ -217,7 +272,7 @@ def findSongs():
 		playlistId=findExistingPlaylist(playlistId)
 
 	#after playlistId has been set, process the batches
-
+	#addBatch(totalProcessed,maxTitles,titlelist)
 	return titlelist
 
 
@@ -407,6 +462,7 @@ if __name__ == '__main__':
 #
 #set global vaiables	
 
+	#ytList={}
 	ytList=[]
 
 	trackids=[]
