@@ -75,9 +75,12 @@ LOG.TXT
 
 Sometimes youtube_spfy cannot find a song on Spotify, or an error occurs preventing a song from being uploaded to your list. Your log.txt file will tell you exactly which songs failed because they could not be found on Spotify, which could not be uploaded due to an error, and which ones succeeded. If possible, it will include the name and/or Spotify id of the song.
 ```
-Tip: Any words inside of parentheses () or square brackets[] will automatically be deleted. So "Artist - Name (Official Audio)" becomes "Artist - Name." This is because the latter is more likely to yield a result on Spotify, while the former will return 'not found'. However, this means that arists with these characters in their name, such as Sunn O))) may create errors. 
+Tip: Any words inside of parentheses () or square brackets[] will automatically be deleted. So "Artist - Name (Official Audio)" becomes "Artist - Name." 
+This is because the latter is more likely to yield a result on Spotify, while the former will return 'not found'. 
+However, this means that arists with these characters in their name, such as Sunn O))) may create errors. 
 
-Additionally, Spotify may return a different version of the song based on the title. This is especialyl true of remixes, which will usually return the original version of the song rather than the remix
+Additionally, Spotify may return a different version of the song based on the title. 
+This is especially true of remixes, which will usually return the original version of the song rather than the remix
 ```
 Youtube_spfy will not allow duplicate files on a playlist. If a song was not added to the playlist because it was already found on the playlist, this will be stated on the log.txt entry for this song.
 
