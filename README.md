@@ -111,4 +111,4 @@ USER EXPERIENCE:
 After the script runs, add some additional functions to display the log.txt file to the user in a reading-friendly manner, search through the log, etc. Perhaps can be accomplished by adding functions to the Log class, or by creating a Log_reader class.
 
 PROGRAMMER EXPERIENCE:
-This code does not adhere to Python bes practices (which I am now more aware of). Thus, certain functions could be renamed in Python style, code comments could be more Pythonic etc.
+This code does not adhere to Python best practices (which I am now more aware of). Thus, certain functions could be renamed in Python style, code comments could be more Pythonic etc.
