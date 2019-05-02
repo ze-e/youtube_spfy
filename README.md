@@ -7,8 +7,10 @@ Dependencies--
 
 youtube_spfy requires the following dependencies:
 
-python
-https://www.python.org/downloads/
+Use requirements.txt to automatically install all dependencies
+`pip install -r requirements.txt`
+
+Or, use the following:
 
 the youtube_dl python module
 https://pypi.org/project/youtube_dl/
