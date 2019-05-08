@@ -1,9 +1,4 @@
 """
-To do: 
-Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
-
-Improve search by parsing string, seperating track title and artist
-
 to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/[userId]',
     
@@ -74,7 +69,7 @@ def load_config():
     global user_config
     stream = open('config.yaml')
     user_config = yaml.load(stream)
-    #pprint(user_config)
+
 #
 #creates json text file if none exists
 def firstRun():
@@ -227,8 +222,7 @@ def findSongs():
     global playlistId
     titlelist=[]
 
-    #first, check if the user gave us an id or name
-    #if they did not, create a new playlist
+    #check if the user gave us an id or name. if they did not, create a new playlist
     if playlistId == None:
         playlistId=createPlaylist("youtube_spfy")
         existing=[]
@@ -416,35 +410,38 @@ def addBatch(totalProcessed,maxTitles,titlelist):
 
             #try to get the trackid for our title
             try:
-                print(titlelist[item]['tracks']['items'][0]['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items'][0]['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
-                titleid=titlelist[item]['tracks']['items'][0]['id']
+                print("{0} added to: {1} id: {3} {4!s} of {5!s} total: {6!s}".format(titlelist[item]['tracks']['items']['name'], playlistId, titlelist[item]['tracks']['items']['id'], thisTitle, maxTitles, totalProcessed))
+                #print(titlelist[item]['tracks']['items']['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items']['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
+                titleid=titlelist[item]['tracks']['items']['id']
             #if the titleid isn't in our list of trackids, and it doesn't exist in our playlist, add it to the trackids and log it
                 if titleid not in trackids and titleid not in existing:
                     trackids.append(titleid)
                     #write result to log
-                    log.success(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'])
+                    log.success(item,titlelist[item]['tracks']['items']['name'],titlelist[item]['tracks']['items']['id'])
 
             #if it is already in our list of track ids, skip it and log the result
                 elif titleid in trackids:
                     print("skipping dup trackid...")
                     #write result to log
-                    log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'dup in trackid')
+                    log.failure(item,titlelist[item]['tracks']['items']['name'],titlelist[item]['tracks']['items']['id'],'dup in trackid')
 
             #if it is already in our playlist, skip it and log the result
                 elif titleid in existing:
                     print("track already added to playlist!")
                     #write result to log
-                    log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'track already added to playlist')
+                    log.failure(item,titlelist[item]['tracks']['items']['name'],titlelist[item]['tracks']['items']['id'],'track already added to playlist')
 
             #increment the ids processed this batch, and the total amount of ids processed
                 thisTitle+=1
                 totalProcessed+=1
 
             #if we couldn't get the track id from the track title for some reason, log the result
-            except IndexError:
-                print("couldn't add item!")
+            except IndexError as e:
+                print("couldn't add item! Error:{0!s}. Item:{1!s}".format(e,json.dumps(titlelist[item])))
                 #write result to log
                 log.failure(item,'unknown','unknown','couldn\'t add item')
+            except Exception as e:
+                print("titleList error:{0!s}".format(e))
 
         #exit the loop if we've reached our batch limit or reached the end of our list of titles
         else:
@@ -465,7 +462,8 @@ def addBatch(totalProcessed,maxTitles,titlelist):
 #
 #if we still have some tracks on our tracklist, clear our list of track ids and start the next batch
     else:
-        trackids.clear()
+        del trackids[:]
+        #trackids.clear()
         addBatch(totalProcessed,maxTitles,titlelist)
 
 if __name__ == '__main__':
@@ -478,6 +476,8 @@ if __name__ == '__main__':
     ytList=[]
     trackids=[]
     skipList = "False"
+    reload(sys)
+    #sys.setdefaultencoding("utf-8")
     log = Log()
 
 #load user credentials
@@ -526,8 +526,6 @@ if __name__ == '__main__':
         skipList="True"
         print("skipping list creation, and using data.txt instead")
 
-#
-#create text files
 
 #create data.txt if none exists
     if os.path.exists('data.txt'):
