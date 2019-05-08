@@ -1,9 +1,4 @@
 """
-To do: 
-Add argparse (https://docs.python.org/3.3/library/argparse.html) to handle arguments
-
-Improve search by parsing string, seperating track title and artist
-
 to access desktop site and play around with user spotify lists:
 'https://open.spotify.com/user/[userId]',
     
@@ -19,10 +14,12 @@ import spotipy
 import yaml
 import os
 import spotipy.util as util
-from pprint import pprint
+#from pprint import pprint
 #used for debugging, if you want to print json
 import datetime
 import argparse
+
+assert sys.version_info.major == 3,"Wrong Python version. Please install Python3."
 
 #
 #displays welcome/help message
@@ -74,7 +71,7 @@ def load_config():
     global user_config
     stream = open('config.yaml')
     user_config = yaml.load(stream)
-    #pprint(user_config)
+
 #
 #creates json text file if none exists
 def firstRun():
@@ -125,16 +122,13 @@ class Log:
         })
 
     def printLog(self):
-        with open('log.txt', 'w') as outfile:  
-            json.dump(self.logText, outfile)
+        print(json.dumps(self.logText, indent=4, sort_keys=True))
 
     def results(self):
         notFoundItems=len(self.logText['song_not_found'])
         failureItems=len(self.logText['failure'])
         successItems=len(self.logText['success'])
         return notFoundItems,failureItems,successItems
-
-
 
 #
 #create json from youtube playlist, using youtube-dl (https://rg3.github.io/youtube-dl/) and the youtube_dl python module (https://pypi.org/project/youtube_dl/)
@@ -197,7 +191,7 @@ def getYoutube(url):
     with open('data.txt') as json_file:  
         data = json.load(json_file)
         for s in data:
-            print(s.encode('utf-8').strip())
+            print(s)
     return data
 
 #
@@ -227,8 +221,7 @@ def findSongs():
     global playlistId
     titlelist=[]
 
-    #first, check if the user gave us an id or name
-    #if they did not, create a new playlist
+    #check if the user gave us an id or name. if they did not, create a new playlist
     if playlistId == None:
         playlistId=createPlaylist("youtube_spfy")
         existing=[]
@@ -258,7 +251,7 @@ def findSongs():
     #get our youtube json, and search for each item by title
     print("searching for tracks...");
     for s in ytList:
-        print(s.encode('utf-8').strip())
+        print(s)
         if s!="":
             result=sp.search(s, limit=1, offset=0, type='track', market=None)
         else:
@@ -415,7 +408,7 @@ def addBatch(totalProcessed,maxTitles,titlelist):
 #before we can upload our tracks to a playlist, we need to grab their ids
 
             #try to get the trackid for our title
-            try:
+            try:                
                 print(titlelist[item]['tracks']['items'][0]['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items'][0]['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
                 titleid=titlelist[item]['tracks']['items'][0]['id']
             #if the titleid isn't in our list of trackids, and it doesn't exist in our playlist, add it to the trackids and log it
@@ -441,10 +434,19 @@ def addBatch(totalProcessed,maxTitles,titlelist):
                 totalProcessed+=1
 
             #if we couldn't get the track id from the track title for some reason, log the result
-            except IndexError:
-                print("couldn't add item!")
-                #write result to log
-                log.failure(item,'unknown','unknown','couldn\'t add item')
+            except IndexError as e:
+                try:
+                    print("couldn't add item! Error:{0!s}. Item:{1!s}".format(e,titlelist[item]['tracks']['items'][0]['name']))      
+                    
+                    #write result to log
+                    log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'couldn\'t add item re: index error')
+                except:
+                    print("couldn't add item! Error:{0!s}.".format(e))      
+                    
+                    #write result to log
+                    log.failure(item,'unknown','unknown','couldn\'t add item')
+            except Exception as e:
+                print("titleList error:{0!s}".format(e))
 
         #exit the loop if we've reached our batch limit or reached the end of our list of titles
         else:
@@ -458,14 +460,18 @@ def addBatch(totalProcessed,maxTitles,titlelist):
 #
 #when the total processed is equal to the total number of items on our list of tracks, congratulations! we uploaded our list!
     if totalProcessed==len(titlelist):
-        log.printLog()
         notFoundItems,failureItems,successItems=log.results()
         print(str(notFoundItems)+" items not found on Spotify, "+str(failureItems)+" items failed to upload and "+str(successItems)+" items added successfully!")
-        print("(view log.txt for additional information)")
+        showLog = input("type 'y' to show log")
+        if showLog.lower() == "y":
+            log.printLog()
+        else:
+            print("(view log.txt for additional information)")
 #
 #if we still have some tracks on our tracklist, clear our list of track ids and start the next batch
     else:
-        trackids.clear()
+        del trackids[:]
+        #trackids.clear()
         addBatch(totalProcessed,maxTitles,titlelist)
 
 if __name__ == '__main__':
@@ -491,6 +497,7 @@ if __name__ == '__main__':
     parser.add_argument("--source","-s",help="the url of the youtube playlist we are creating out spotify list from. Can be set to \"data.txt\" to use a custom data.txt song list")
     parser.add_argument("--name","-n",help="an id for an existing playlist, a name of an existing playlist, a name for a new playlist, or blank--in which case a new playlist is created with the default name")
     parser.add_argument("--skipJSON","-skip",help="if set to True, a new JSON file will not be created and the last youtube playlist uploaded will be used",action="store_true")
+
     args = parser.parse_args()
 #first argument checks for a URL, if none is present, a help message is displayed
     if args.source!=None:
@@ -526,9 +533,6 @@ if __name__ == '__main__':
         skipList="True"
         print("skipping list creation, and using data.txt instead")
 
-#
-#create text files
-
 #create data.txt if none exists
     if os.path.exists('data.txt'):
         pass
@@ -540,6 +544,8 @@ if __name__ == '__main__':
         #build list
         print("trying to create youtube list...")
         ytList=getYoutube(myURL)
+
+
 #
 #connect to spotify
 token = util.prompt_for_user_token(user_config['username'], scope='playlist-read-private,playlist-modify-private,playlist-modify-public', client_id=user_config['client_id'], client_secret=user_config['client_secret'], redirect_uri=user_config['redirect_uri'])
