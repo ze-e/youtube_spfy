@@ -19,6 +19,12 @@ from pprint import pprint
 import datetime
 import argparse
 
+try:
+    import urllib.parse
+    #import urlparse
+except ImportError:
+    assert sys.version_info.major == 3,"Wrong Python version. Please install Python3."
+
 #
 #displays welcome/help message
 def display_help(message):
@@ -252,7 +258,7 @@ def findSongs():
     #get our youtube json, and search for each item by title
     print("searching for tracks...");
     for s in ytList:
-        print(s.encode('utf-8').strip())
+        print(s)
         if s!="":
             result=sp.search(s, limit=1, offset=0, type='track', market=None)
         else:
@@ -410,26 +416,27 @@ def addBatch(totalProcessed,maxTitles,titlelist):
 
             #try to get the trackid for our title
             try:
-                print("{0} added to: {1} id: {3} {4!s} of {5!s} total: {6!s}".format(titlelist[item]['tracks']['items']['name'], playlistId, titlelist[item]['tracks']['items']['id'], thisTitle, maxTitles, totalProcessed))
-                #print(titlelist[item]['tracks']['items']['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items']['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
-                titleid=titlelist[item]['tracks']['items']['id']
+                #print("{0} added to: {1} id: {3} {4!s} of {5!s} total: {6!s}".format(titlelist[item]['tracks']['items'][0]['name'], playlistId, titlelist[item]['tracks']['items'][0]['id'], thisTitle, maxTitles, totalProcessed))
+                
+                print(titlelist[item]['tracks']['items'][0]['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items'][0]['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
+                titleid=titlelist[item]['tracks']['items'][0]['id']
             #if the titleid isn't in our list of trackids, and it doesn't exist in our playlist, add it to the trackids and log it
                 if titleid not in trackids and titleid not in existing:
                     trackids.append(titleid)
                     #write result to log
-                    log.success(item,titlelist[item]['tracks']['items']['name'],titlelist[item]['tracks']['items']['id'])
+                    log.success(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'])
 
             #if it is already in our list of track ids, skip it and log the result
                 elif titleid in trackids:
                     print("skipping dup trackid...")
                     #write result to log
-                    log.failure(item,titlelist[item]['tracks']['items']['name'],titlelist[item]['tracks']['items']['id'],'dup in trackid')
+                    log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'dup in trackid')
 
             #if it is already in our playlist, skip it and log the result
                 elif titleid in existing:
                     print("track already added to playlist!")
                     #write result to log
-                    log.failure(item,titlelist[item]['tracks']['items']['name'],titlelist[item]['tracks']['items']['id'],'track already added to playlist')
+                    log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'track already added to playlist')
 
             #increment the ids processed this batch, and the total amount of ids processed
                 thisTitle+=1
@@ -437,7 +444,26 @@ def addBatch(totalProcessed,maxTitles,titlelist):
 
             #if we couldn't get the track id from the track title for some reason, log the result
             except IndexError as e:
-                print("couldn't add item! Error:{0!s}. Item:{1!s}".format(e,json.dumps(titlelist[item])))
+                try:
+                    print("couldn't add item! Error:{0!s}. Item:{1!s}".format(e,json.dumps(titlelist[item])))
+                    print("name:".format(str(titlelist[item]['tracks']['items'][0]['name'])))
+                    print("id:".format(str(titlelist[item]['tracks']['items'][0]['id'])))
+                    
+                except:
+                    titleJSON = titlelist[item]['tracks']['items']
+                    for nameItem in titleJSON:
+                        print(nameItem['name'])
+
+        
+                try:
+                    #urlItem = parse.urlsplit(titlelist[item]['tracks']['next'])
+                
+                    urlItem = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(titlelist[item]['tracks']['next']).query))
+                    print("cleaned:"+urlItem['query'])
+                    #print("cleaned:"+titlelist[item]['tracks']['next'].split('?query=')[1].split('&type=')[0])
+                except Exception as e:
+                    print("cleanedNOurlib:"+titlelist[item]['tracks']['next'].split('?query=')[1].split('&type=')[0]+str(e))
+
                 #write result to log
                 log.failure(item,'unknown','unknown','couldn\'t add item')
             except Exception as e:
@@ -476,7 +502,7 @@ if __name__ == '__main__':
     ytList=[]
     trackids=[]
     skipList = "False"
-    reload(sys)
+    #reload(sys)
     #sys.setdefaultencoding("utf-8")
     log = Log()
 
