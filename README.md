@@ -108,10 +108,3 @@ PERFORMANCE:
 1. Instead of using one database (data.txt), store any NEW list as a database (<name>.txt). If a database exists for the playlist, load from that playlist instead. That way, a user can have multiple playlists updated on a regular basis without waiting for an entirely new txt file to be generated
 
 2. Use a dictionary instead of a list to check for duplicates, improving speed
-
-USER EXPERIENCE:
-After the script runs, add some additional functions to display the log.txt file to the user in a reading-friendly manner, search through the log, etc. Perhaps can be accomplished by adding functions to the Log class, or by creating a Log_reader class.
-
-PROGRAMMER EXPERIENCE:
-1. Project is missing requirements.txt
-2. This code does not adhere to Python best practices (which I am now more aware of). Thus, certain functions could be renamed in Python style, code comments could be more Pythonic etc.

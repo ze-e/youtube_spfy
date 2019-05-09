@@ -19,9 +19,17 @@ import argparse
 
 assert sys.version_info.major == 3,"Wrong Python version. Please install Python3."
 
-#
-#displays welcome/help message
+
+"""Takes a youtube video or playlist and turns it into a spotify playlist."""
+
+__author__ = "ZEE"
+__versioj__ = "1.2"
+
+###
+### 1. Displaying help messages, creating log, loading config (username, password etc.) and setting up
+
 def display_help(message):
+    '''use this welcome/help message if no arguments are entered'''
     text="""\
         ------------------------
         WELCOME TO YOUTUBE_SPFY!
@@ -63,22 +71,20 @@ def display_help(message):
     print(text)
     sys.exit()
 
-#
-#loads user credentials for Spotify
 def load_config():
+    '''#loads user credentials for Spotify'''
     global user_config
     stream = open('config.yaml')
-    user_config = yaml.load(stream)
+    user_config = yaml.load(stream,Loader=yaml.BaseLoader)
 
-#
-#creates json text file if none exists
 def firstRun():
+    '''creates json data.txt file if none exists'''
     data=[]
     with open('data.txt', 'w') as outfile:  
         json.dump(data, outfile)
-#
-#logs our results
+
 class Log:
+    '''log the outcome of our script'''
     logText={}
     logText['song_not_found']=[]
     logText['song_renamed']=[]
@@ -127,16 +133,15 @@ class Log:
         failureItems=len(self.logText['failure'])
         successItems=len(self.logText['success'])
         return notFoundItems,failureItems,successItems
+###
+### 2. Get list of tracks from youtube playlist
 
-#
-#create json from youtube playlist, using youtube-dl (https://rg3.github.io/youtube-dl/) and the youtube_dl python module (https://pypi.org/project/youtube_dl/)
 def getYoutube(url):
+    '''downloads tracklist from youtube, using youtube-dl (https://rg3.github.io/youtube-dl/) and the youtube_dl python module (https://pypi.org/project/youtube_dl/)'''
 
-    print("building youtube json...")
+    print("downloading titles from youtube to json...")
 
-    #create the dict and list we will add our titles into
     data = []
-
     ydl = youtube_dl.YoutubeDL({'outtmpl': '%(id)s%(ext)s','ignoreerrors': True})
 
     #use youtube_dl to download the track titles, but not the files
@@ -146,43 +151,20 @@ def getYoutube(url):
         download=False 
         )
 
-    #check if we returned a playlist, or a single video
-
     #playlist
     if 'entries' in result:
         for video in result['entries']:
             if video!=None:
-                video_title = video['title']
-                #cleans up the video title, removes everything after a ( or [ in a title, or after ) ] if they are the first character in the title string
-                oldTitle=video_title
-                video_title=cleanTitle(video_title,"(",")")
-                if oldTitle!=video_title:
-                    log.renamed(oldTitle,video_title)
-                oldTitle=video_title
-                video_title=cleanTitle(video_title,"[","]")
-                if oldTitle!=video_title:
-                    log.renamed(oldTitle,video_title)
-                #
+                video_title=addVideo(video)
                 data.append(video_title)
+
 
     #single video
     else:
         video = result
-        video_title = video['title']
-        #
-        oldTitle=video_title
-        video_title=cleanTitle(video_title,"(",")")
-        if oldTitle!=video_title:
-            log.renamed(oldTitle,video_title)
-        oldTitle=video_title
-        video_title=cleanTitle(video_title,"[","]")
-        if oldTitle!=video_title:
-            log.renamed(oldTitle,video_title)
-        #
-        print("title"+video_title)
+        video_title=addVideo(video)
         data.append(video_title)
 
-    #write to our json file
     with open('data.txt', 'w') as outfile:  
         json.dump(data, outfile)
 
@@ -190,11 +172,11 @@ def getYoutube(url):
         data = json.load(json_file)
         for s in data:
             print(s)
+    
     return data
 
-#
-#strips characters out of the title name in order to improve search results
 def cleanTitle(video_title,begin,end):
+    '''strips characters out of the title name in order to improve search results'''
     splitCha=begin
     if splitCha in video_title:
         if video_title.find(splitCha, 0, len(video_title))!=0:
@@ -206,47 +188,62 @@ def cleanTitle(video_title,begin,end):
     elif splitCha not in video_title:
         return video_title
 
-#
-#return the data from the youtube jsonlist
+def addVideo(video):
+    video_title = video['title']
+    #cleans up the video title, removes everything after a ( or [ in a title, or after ) ] if they are the first character in the title string
+    oldTitle=video_title
+    video_title=cleanTitle(video_title,"(",")")
+    if oldTitle!=video_title:
+        log.renamed(oldTitle,video_title)
+    oldTitle=video_title
+    video_title=cleanTitle(video_title,"[","]")
+    if oldTitle!=video_title:
+        log.renamed(oldTitle,video_title)
+    return video_title
+
 def getList():
+    '''return the data from the youtube jsonlist'''
     with open('data.txt') as json_file:  
         data = json.load(json_file)
     return data
 
-#
-#first, we search for our youtubelist on Spotify, and create a list of those that exist on Spotify
-def findSongs():
-    global playlistId
+###
+### 3. search for our youtubelist on Spotify
+
+def findSongs(ytList,playlistId):
+    '''Takes list of songs and searches for them on spotify, returns a list of those that were found'''
+
+    if ytList == None:
+        ytList=getList()
+    
     titlelist=[]
+    existing=[]
 
-    #check if the user gave us an id or name. if they did not, create a new playlist
-    if playlistId == None:
-        playlistId=createPlaylist("youtube_spfy")
-        existing=[]
+    playlistId, created = getPlaylistId(playlistId)
 
-    #if they did, check whether what they gave us was an id or a name, and search for it in the user's Spotify playlists
-    elif playlistId != None:
-        playlistId=findExistingPlaylist(playlistId)
-        #then get the tracks on the playlist. we don't want to bother searching for those that have already been added
+    if created == False:
+        #get the existing tracks on the playlist. we don't want to bother searching for those that have already been added
         tracks=[]
-        existing=get_playlist_tracks(tracks,100,0,'name')
+        existing=get_playlist_tracks(tracks,100,0,'name',playlistId)
+    else:
+        print("new playlist created! "+playlistId)
 
     #attempt to delete and log any tracks from the list already on the playlist. this does not work perfectly
-    ytList=getList()
     if len(existing)>0:
         for s in ytList:
             if s in existing:
                 print(s+" already uploaded...")
                 log.failure('unknown',s,'unknown','track already uploaded')
                 ytList.remove(s)
+
             else:
                 for e in existing:
-                    if s in ytList and s.find(e)!=-1:
+                    if s in ytList and s.find(e) != -1:
                         print(s+" already uploaded...")
                         log.failure('unknown',s,'unknown','track already uploaded')
                         ytList.remove(s)
-    #
-    #get our youtube json, and search for each item by title
+
+    #search for each item in our data by title
     print("searching for tracks...");
     for s in ytList:
         print(s)
@@ -270,25 +267,35 @@ def findSongs():
             title=s
             log.noResults(title)
 
-    #
-    #next we send our list of tracks to be uploaded
+    return titlelist, playlistId
 
-    return titlelist
+def getPlaylistId(playlistId):
+    '''create a new playlist or return an existing playlist'''
+    
+    created = False
 
+    #check if the user gave us an id or name. if they did not, create a new playlist
+    if playlistId == None:
+        playlistId=createPlaylist("youtube_spfy")
+        created = True
 
-#
-#create a new playlist
+    #if they did, check whether what they gave us was an id or a name, and search for it in the user's Spotify playlists
+    elif playlistId != None:
+        playlistId=findExistingPlaylist(playlistId)
+
+    return playlistId, created
+
 def createPlaylist(playListName):
+    '''creates a new playlist'''
     print("creating new playlist...")
     newList={}
     newList=sp.user_playlist_create(user=user_config['username'], name=playListName, public=True)
     newListId=newList['uri']
     newListId=newListId.split(':')[2]
-    print("new playlist created! "+newListId)
     return newListId
-#
-#search for the playlist our user gave and return its id
+
 def findExistingPlaylist(playlistId):
+    '''searches for the playlist our user gave and returns its id'''
     playlists = sp.user_playlists(user=user_config['username'])
 
     #see if the user has any playlists
@@ -297,10 +304,12 @@ def findExistingPlaylist(playlistId):
 
         #if the user gave us an existing playlist name (the variable can store an id or name string) return the matching playlist's id
             if playlist['name']==playlistId:
+                print("found existing playlist name")
                 return playlist['id']
     
         #if the user gave us an existing playlist id, just return the id they gave us
             elif playlist['id']==playlistId:
+                print("found existing playlist id")
                 return playlistId
     
         #if the user's name doesn't match an existing playlist, then create a new playlist using the name they gave us as the name, and return the new playlist's id
@@ -315,20 +324,18 @@ def findExistingPlaylist(playlistId):
         newPlaylistId=createPlaylist(playlistId)
         return newPlaylistId
 
-#
-#this gets all tracks from a playlist
-#it is used by add_batch() to make sure we don't add any tracks we have already added
+def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal,playlistId):
+    '''gets all tracks from a playlist. Used to make sure we don't add any tracks we have already added
 
-#
-#Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter
-#tracks[] is the list of track ids on our playlist
-#maxTracks is the maximum amount of tracks in a batch (100)
-#totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
-def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal):
+        Note:
+        Spotify only lets us return >100 results from our playlist at a time, so we have to split our playlist into batches, using the offset parameter, and run recursively
 
+        tracks[] is the list of track ids on our playlist
+        maxTracks is the maximum amount of tracks in a batch (100)
+        totalTracks is the number we have processed. Each batch, we increase the offset by the amount of tracks we have processed (which should be 99)
+    '''   
     print("loading existing playlist tracks...")
     results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
-
     if len(results['items'])>0:
         #add the ids of the tracks we found to our track[] list, and increment the total tracks processed
         for result in results['items']:
@@ -343,45 +350,38 @@ def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal):
                 item=cleanTitle(item,"[","]")
                 tracks.append(item)
                 totalTracks+=1
-        return get_playlist_tracks(tracks,100,totalTracks,returnVal)
+        return get_playlist_tracks(tracks,100,totalTracks,returnVal,playlistId)
 
-        #if our playlist contains no items (because it's a new playlist, or we processed them all),return our current tracklist (in the case of a new playlist, a blank list)
-
+    #if our playlist contains no items (because it's a new playlist, or we processed them all), return our current tracklist (in the case of a new playlist, a blank list)
     elif len(results['items'])==None:
         print("error fetching playlist tracks or playlist is empty")
         tracks=[]
         return tracks
 
     elif len(results['items'])==0:
-        print("all existing playlist tracks loaded")
+        print("all existing tracks loaded")
         return tracks
     else:
-        print("error fetching playlist tracks. warning: list may contain duplicates")
+        print("error searching for playlist tracks. warning: list may contain duplicates")
         return tracks
 
 
-#
-#add the batch to the playlist
-def addSongsToPlaylist():
-    print("adding tracks to playlist...")
-    sp.user_playlist_add_tracks(user=user_config['username'], playlist_id=playlistId, tracks=trackids)
-    print("success!")
-
-#
-#processes a batch, then terminates the program when all batches have processed
+###
+###4. add tracks to spotify playlist
 
 
-#
-#spotify only allows us to return >100 items at a time. To get around this, we must split the songs into >100-song "batches"
+def addBatch(totalProcessed,maxTitles,titlelist,playlistId,trackids):
+    '''processes a list of tracks and uploads them to spotify
 
-#
-#maxTitle is the maximum amount of titles spotify will allow us to search for at a time
-#thisTitle counts how many files have been processed in this batch
-#totalProcessed counts how many files have been processed altogether
-#titleList will be our list of titles that have been found on Spotify and are ready to upload
+        Note:
+        spotify only allows us to return >100 items at a time. To get around this, we must split the songs into >100-song "batches"
 
+        maxTitle is the maximum amount of titles spotify will allow us to search for at a time
+        thisTitle counts how many files have been processed in this batch
+        totalProcessed counts how many files have been processed altogether
+        titleList will be our list of titles that have been found on Spotify and are ready to upload
 
-def addBatch(totalProcessed,maxTitles,titlelist):
+    '''
 
     print("adding batch...")
 
@@ -389,7 +389,7 @@ def addBatch(totalProcessed,maxTitles,titlelist):
     existing=[]
     if len(existing)!=len(titlelist):
         tracks=[]
-        existing=get_playlist_tracks(tracks,100,0,'id')
+        existing=get_playlist_tracks(tracks,100,0,'id',playlistId)
     else:
         print("length of playlist equal to total item list")
 
@@ -402,29 +402,27 @@ def addBatch(totalProcessed,maxTitles,titlelist):
         #if we have not reached our batch limit and the titles processed is smaller than the number of titles in our title list
         if thisTitle<=maxTitles and totalProcessed<len(titlelist):
 
-#
-#before we can upload our tracks to a playlist, we need to grab their ids
+    #
+    #before we can upload our tracks to a playlist, we need to grab their ids
 
             #try to get the trackid for our title
             try:                
                 print(titlelist[item]['tracks']['items'][0]['name']+" added to "+playlistId+" id: "+titlelist[item]['tracks']['items'][0]['id']+" "+str(thisTitle)+" of "+str(maxTitles)+" total: "+str(totalProcessed))
                 titleid=titlelist[item]['tracks']['items'][0]['id']
+            
             #if the titleid isn't in our list of trackids, and it doesn't exist in our playlist, add it to the trackids and log it
                 if titleid not in trackids and titleid not in existing:
                     trackids.append(titleid)
-                    #write result to log
                     log.success(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'])
 
             #if it is already in our list of track ids, skip it and log the result
                 elif titleid in trackids:
                     print("skipping dup trackid...")
-                    #write result to log
                     log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'dup in trackid')
 
             #if it is already in our playlist, skip it and log the result
                 elif titleid in existing:
                     print("track already added to playlist!")
-                    #write result to log
                     log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'track already added to playlist')
 
             #increment the ids processed this batch, and the total amount of ids processed
@@ -436,52 +434,65 @@ def addBatch(totalProcessed,maxTitles,titlelist):
                 try:
                     print("couldn't add item! Error:{0!s}. Item:{1!s}".format(e,titlelist[item]['tracks']['items'][0]['name']))      
                     
-                    #write result to log
                     log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'couldn\'t add item re: index error')
                 except:
                     print("couldn't add item! Error:{0!s}.".format(e))      
-                    
-                    #write result to log
                     log.failure(item,'unknown','unknown','couldn\'t add item')
+            
             except Exception as e:
                 print("titleList error:{0!s}".format(e))
 
         #exit the loop if we've reached our batch limit or reached the end of our list of titles
         else:
             break
-#
-#if our list of track ids is at least one, upload them to the playlist
+    #
+    #if our list of track ids is at least one, upload them to the playlist
     if len(trackids)>0:
-        addSongsToPlaylist();
+        addSongsToPlaylist(playlistId,trackids);
     else:
         print("no additional tracks to add")
-#
-#when the total processed is equal to the total number of items on our list of tracks, congratulations! we uploaded our list!
+    #
+    #when the total processed is equal to the total number of items on our list of tracks, congratulations! we uploaded our list!
     if totalProcessed==len(titlelist):
-        notFoundItems,failureItems,successItems=log.results()
-        print(str(notFoundItems)+" items not found on Spotify, "+str(failureItems)+" items failed to upload and "+str(successItems)+" items added successfully!")
-        showLog = input("type 'y' to show log")
-        if showLog.lower() == "y":
-            log.printLog()
-        else:
-            print("(view log.txt for additional information)")
-#
-#if we still have some tracks on our tracklist, clear our list of track ids and start the next batch
+        finishedRun()
+    #
+    #if we still have some tracks on our tracklist, clear our list of track ids and start the next batch
     else:
         del trackids[:]
-        #trackids.clear()
-        addBatch(totalProcessed,maxTitles,titlelist)
+        addBatch(totalProcessed,maxTitles,titlelist,playlistId,trackids)
+
+def addSongsToPlaylist(playlistId,trackids):
+    '''adds a batch of songs to the playlist'''
+
+    print("adding tracks to playlist...")
+    sp.user_playlist_add_tracks(user=user_config['username'], playlist_id=playlistId, tracks=trackids)
+    print("success!")
+
+def finishedRun():
+    '''terminates the program and shows results/log'''
+    notFoundItems,failureItems,successItems=log.results()
+    print(str(notFoundItems)+" items not found on Spotify, "+str(failureItems)+" items failed to upload and "+str(successItems)+" items added successfully!")
+    showLog = input("type 'y' to show log")
+    if showLog.lower() == "y":
+        log.printLog()
+    else:
+        print("(view log.txt for additional information)")
+
+###################################
+#Runs our program from commandline#
+###################################
 
 if __name__ == '__main__':
 
-#
+#1. setup
+
 #global variables
 
-    playlistID = None
+    playlistId = None
     user_config = {}
     ytList=[]
     trackids=[]
-    skipList = "False"
+    skipList = False
     log = Log()
 
 #load user credentials
@@ -497,6 +508,7 @@ if __name__ == '__main__':
     parser.add_argument("--skipJSON","-skip",help="if set to True, a new JSON file will not be created and the last youtube playlist uploaded will be used",action="store_true")
 
     args = parser.parse_args()
+
 #first argument checks for a URL, if none is present, a help message is displayed
     if args.source!=None:
         try:
@@ -508,14 +520,14 @@ if __name__ == '__main__':
         display_help(2)
     
 #second argument will be either:
-#1 - an id for an existing playlist
-#2 - a name of an existing playlist
-#3 - a name for a new playlist
-#4 - blank, in which case a new playlist is created with the default name
+# - an id for an existing playlist
+# - a name of an existing playlist
+# - a name for a new playlist
+# - blank, in which case a new playlist is created with the default name
     if args.name!=None:
         try:        
             playlistId=args.name
-            print("playlist id/name found")
+            print("user entered playlist id/name")
         except:
             print('error: bad playlist id/name')
     elif args.name==None:
@@ -524,11 +536,11 @@ if __name__ == '__main__':
 
 #if the third argument is "True", skip creating the json 
     if args.skipJSON:
-        skipList="True"
+        skipList=True
         print("skipping list creation")
 
     if myURL=='data.txt':
-        skipList="True"
+        skipList=True
         print("skipping list creation, and using data.txt instead")
 
 #create data.txt if none exists
@@ -537,27 +549,39 @@ if __name__ == '__main__':
     else:
         firstRun()
 
-#create youtubeList, unless user chose to skiplist
-    if skipList == "False":
+# 2. create youtubeList, unless user chose to skiplist
+    if skipList == False:
         #build list
         print("trying to create youtube list...")
-        ytList=getYoutube(myURL)
+        try:
+            ytList=getYoutube(myURL)
+        except Exception as e:
+            print("error: failed to create data.txt Reason:{0!s}".format(e))
+            sys.exit()
 
+# 3. find tracks on spotify
 
-#
 #connect to spotify
 token = util.prompt_for_user_token(user_config['username'], scope='playlist-read-private,playlist-modify-private,playlist-modify-public', client_id=user_config['client_id'], client_secret=user_config['client_secret'], redirect_uri=user_config['redirect_uri'])
 
+#find tracks on spotify
 if token:
         sp = spotipy.Spotify(auth=token)
         print("connection successful")
 
-#if token was successful, search for the songs in the list
-        titlelist = findSongs()
+        try:
+            titlelist, playlistId = findSongs(ytList, playlistId)
+        except Exception as e:
+            print("error: failed to find tracks on spotify. Reason:{0!s}".format(e))
+            sys.exit()
 
-#once we get our titlelist, add it to the batch
-        addBatch(0,100,titlelist)
-    
+
+# 4. upload tracks to spotify
+
+        try:
+            addBatch(0,100,titlelist,playlistId,trackids)
+        except Exception as e:
+            print("error: found tracks, but failed to add tracks to spotify playlist. Reason:{0!s}".format(e))   
 
 else:
         print ("Can't get token for", user_config['username'])
