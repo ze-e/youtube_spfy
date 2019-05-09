@@ -224,7 +224,7 @@ def findSongs(ytList,playlistId):
     if created == False:
         #get the existing tracks on the playlist. we don't want to bother searching for those that have already been added
         tracks=[]
-        existing=get_playlist_tracks(tracks,100,0,'name')
+        existing=get_playlist_tracks(tracks,100,0,'name',playlistId)
     else:
         print("new playlist created! "+playlistId)
 
@@ -304,10 +304,12 @@ def findExistingPlaylist(playlistId):
 
         #if the user gave us an existing playlist name (the variable can store an id or name string) return the matching playlist's id
             if playlist['name']==playlistId:
+                print("found existing playlist name")
                 return playlist['id']
     
         #if the user gave us an existing playlist id, just return the id they gave us
             elif playlist['id']==playlistId:
+                print("found existing playlist id")
                 return playlistId
     
         #if the user's name doesn't match an existing playlist, then create a new playlist using the name they gave us as the name, and return the new playlist's id
@@ -322,7 +324,7 @@ def findExistingPlaylist(playlistId):
         newPlaylistId=createPlaylist(playlistId)
         return newPlaylistId
 
-def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal):
+def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal,playlistId):
     '''gets all tracks from a playlist. Used to make sure we don't add any tracks we have already added
 
         Note:
@@ -334,7 +336,6 @@ def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal):
     '''   
     print("loading existing playlist tracks...")
     results = sp.user_playlist_tracks(user=user_config['username'], playlist_id=playlistId, limit=99, offset=totalTracks)
-
     if len(results['items'])>0:
         #add the ids of the tracks we found to our track[] list, and increment the total tracks processed
         for result in results['items']:
@@ -349,7 +350,7 @@ def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal):
                 item=cleanTitle(item,"[","]")
                 tracks.append(item)
                 totalTracks+=1
-        return get_playlist_tracks(tracks,100,totalTracks,returnVal)
+        return get_playlist_tracks(tracks,100,totalTracks,returnVal,playlistId)
 
         #if our playlist contains no items (because it's a new playlist, or we processed them all), return our current tracklist (in the case of a new playlist, a blank list)
     elif len(results['items'])==None:
@@ -358,7 +359,7 @@ def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal):
         return tracks
 
     elif len(results['items'])==0:
-        print("searched all playlist tracks on spotify")
+        print("all tracks found on playlist")
         return tracks
     else:
         print("error searching for playlist tracks. warning: list may contain duplicates")
@@ -388,7 +389,7 @@ def addBatch(totalProcessed,maxTitles,titlelist,playlistId,trackids):
     existing=[]
     if len(existing)!=len(titlelist):
         tracks=[]
-        existing=get_playlist_tracks(tracks,100,0,'id')
+        existing=get_playlist_tracks(tracks,100,0,'id',playlistId)
     else:
         print("length of playlist equal to total item list")
 
@@ -412,19 +413,16 @@ def addBatch(totalProcessed,maxTitles,titlelist,playlistId,trackids):
             #if the titleid isn't in our list of trackids, and it doesn't exist in our playlist, add it to the trackids and log it
                 if titleid not in trackids and titleid not in existing:
                     trackids.append(titleid)
-                    #write result to log
                     log.success(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'])
 
             #if it is already in our list of track ids, skip it and log the result
                 elif titleid in trackids:
                     print("skipping dup trackid...")
-                    #write result to log
                     log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'dup in trackid')
 
             #if it is already in our playlist, skip it and log the result
                 elif titleid in existing:
                     print("track already added to playlist!")
-                    #write result to log
                     log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'track already added to playlist')
 
             #increment the ids processed this batch, and the total amount of ids processed
@@ -436,12 +434,9 @@ def addBatch(totalProcessed,maxTitles,titlelist,playlistId,trackids):
                 try:
                     print("couldn't add item! Error:{0!s}. Item:{1!s}".format(e,titlelist[item]['tracks']['items'][0]['name']))      
                     
-                    #write result to log
                     log.failure(item,titlelist[item]['tracks']['items'][0]['name'],titlelist[item]['tracks']['items'][0]['id'],'couldn\'t add item re: index error')
                 except:
                     print("couldn't add item! Error:{0!s}.".format(e))      
-                    
-                    #write result to log
                     log.failure(item,'unknown','unknown','couldn\'t add item')
             
             except Exception as e:
@@ -577,8 +572,9 @@ if token:
         try:
             titlelist, playlistId = findSongs(ytList, playlistId)
         except Exception as e:
-            sys.exit()
             print("error: failed to find tracks on spotify. Reason:{0!s}".format(e))
+            sys.exit()
+
 
 # 4. upload tracks to spotify
 
