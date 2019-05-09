@@ -5,17 +5,15 @@ to access desktop site and play around with user spotify lists:
 """
 
 from __future__ import unicode_literals
-import youtube_dl
 #https://pypi.org/project/youtube_dl/
+import youtube_dl
 import json
 import sys
-import spotipy
 #https://spotipy.readthedocs.io/en/latest/
+import spotipy
 import yaml
 import os
 import spotipy.util as util
-#from pprint import pprint
-#used for debugging, if you want to print json
 import datetime
 import argparse
 
