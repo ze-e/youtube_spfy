@@ -1,8 +1,5 @@
-certifi==2019.3.9
-chardet==3.0.4
-idna==2.8
-PyYAML==5.1
 requests==2.21.0
 spotipy==2.4.4
-urllib3==1.24.2
-youtube-dl==2019.4.30
+PyYAML==3.13
+urllib3==1.24.1
+youtube-dl==2019.4.24
