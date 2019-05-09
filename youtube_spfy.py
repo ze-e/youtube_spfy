@@ -352,14 +352,14 @@ def get_playlist_tracks(tracks,maxTracks,totalTracks,returnVal,playlistId):
                 totalTracks+=1
         return get_playlist_tracks(tracks,100,totalTracks,returnVal,playlistId)
 
-        #if our playlist contains no items (because it's a new playlist, or we processed them all), return our current tracklist (in the case of a new playlist, a blank list)
+    #if our playlist contains no items (because it's a new playlist, or we processed them all), return our current tracklist (in the case of a new playlist, a blank list)
     elif len(results['items'])==None:
         print("error fetching playlist tracks or playlist is empty")
         tracks=[]
         return tracks
 
     elif len(results['items'])==0:
-        print("all tracks found on playlist")
+        print("all existing tracks loaded")
         return tracks
     else:
         print("error searching for playlist tracks. warning: list may contain duplicates")
