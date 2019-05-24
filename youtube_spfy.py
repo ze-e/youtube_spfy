@@ -20,10 +20,13 @@ import argparse
 assert sys.version_info.major == 3,"Wrong Python version. Please install Python3."
 
 
-"""Takes a youtube video or playlist and turns it into a spotify playlist."""
+"""
+Description:
+Takes a youtube video or playlist and turns it into a spotify playlist.
+"""
 
 __author__ = "ZEE"
-__versioj__ = "1.2"
+__version__ = "1.2"
 
 ###
 ### 1. Displaying help messages, creating log, loading config (username, password etc.) and setting up
